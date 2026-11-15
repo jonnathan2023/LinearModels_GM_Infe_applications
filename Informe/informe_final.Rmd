@@ -111,6 +111,7 @@ X; y
 $$y = X\beta + e$$
 
 $$\begin{bmatrix} 74 \\ 68 \\ 77 \\ 76 \\ 80 \\ 85 \\ 93 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \\ 1 & 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} \mu \\ \alpha_1 \\ \alpha_2 \\ \alpha_3 \end{bmatrix} + \begin{bmatrix} e_{11} \\ e_{12} \\ e_{13} \\ e_{21} \\ e_{22} \\ e_{31} \\ e_{32} \end{bmatrix}$$
+El vector $e$ que representa el error cumple que $E(e)=0$ y $Var(e)= \sigma^2*I_7$, de forma que se tiene un modelo Guassiano markoviano. 
 
 **b) Encuentre una solución particular de la ecuación normal.**
 
@@ -302,7 +303,10 @@ Lambdah <- matrix(c(7, 3,  2,  2,
 rango_h <- qr(Lambdah)$rank
 ortog_h <- Lambdah %*% G %*% t(Lambdah)
 
-rango_h; fractions(ortog_h)
+rango_h
+ortog_h[1, 2]            # lambda1' G lambda2
+ortog_h[1, 3]            # lambda1' G lambda3
+fractions(ortog_h[2, 3]) # lambda2' G lambda3
 ```
 
 $$\lambda_1^T H = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix}$$
@@ -317,7 +321,9 @@ $$\lambda_1^T G \lambda_2 = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{b
 
 $$\lambda_1^T G \lambda_3 = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ 0 \\ -1 \end{bmatrix} = 0$$
 
-$$\lambda_2^T G \lambda_3 = \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ 0 \\ -1 \end{bmatrix} = \frac{1}{3}$$
+$$\lambda_2^T G \lambda_3 = \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ 0 \\ -1 \end{bmatrix} = \frac{1}{3} \neq 0$$
+
+Como $\lambda_1^T G \lambda_2 = \lambda_1^T G \lambda_3 = 0$, la función $7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3$ es ortogonal (e independiente) de $\alpha_1 - \alpha_2$ y de $\alpha_1 - \alpha_3$. En cambio, $\lambda_2^T G \lambda_3 = 1/3 \neq 0$, por lo que $\alpha_1 - \alpha_2$ y $\alpha_1 - \alpha_3$ no son ortogonales entre sí. Por tanto, las tres funciones paramétricas no son mutuamente ortogonales, aunque sí linealmente independientes.
 
 ## Ejercicio 2
 
@@ -588,7 +594,7 @@ $$F_{cal} = \frac{102.9091}{3(44)} \approx 0.7796 \qquad F_{0.95, 3, 7} = 4.3468
 
 <!-- ═══════════════════════════ REFERENCIAS ═══════════════════════════════ -->
 
-# Fuentes/Referencias Bibliográficas
+# Referencias bibliográficas
 
 - Huamaní Flores, S. (2026). Apuntes de clase del Curso: Modelos lineales I. Universidad Nacional Agraria La Molina, Departamento Académico Estadística e Informática.
 \setlength{\parindent}{0em}
