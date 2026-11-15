@@ -21,6 +21,7 @@ knitr::opts_chunk$set(
   fig.pos   = "H",
   out.width = "82%"
 )
+library(MASS)
 ```
 
 <!-- ══════════════════════════════════════════════════════ PORTADA ══════ -->
@@ -39,7 +40,7 @@ knitr::opts_chunk$set(
 \vspace{0.8cm}
 
 {\large\bfseries Trabajo encomendado de Modelos lineales I:\\[0.15cm]
- Inferencia Gaussiana Markoviana}
+Ejercicios de distribuciones formas cuadráticas, pruebas de hipótesis e intervalos de confianza en modelos de Gauss Markov}
 
 \vspace{1.0cm}
 {\normalsize\bfseries Grupo 5:}
@@ -49,8 +50,8 @@ knitr::opts_chunk$set(
 \hline
 \textbf{Integrante} & \textbf{Código} \\
 \hline
-Pedraza Laboriano, Jonnathan Jesús  &   20231505 \\
-Cortegana Quispe, Luis &  20230388  \\
+Pedraza Laboriano, Jonnathan Jesús & 20231505 \\
+Cortegana Quispe, Luis & 20230388 \\
 Encinas Alvarez, Miguel & 20230391 \\
 Fuente Bueno, Fiorella & 20230395 \\
 name & idcode \\
@@ -72,6 +73,7 @@ name & idcode \\
 }
 \end{titlepage}
 \newpage
+
 <!-- ═══════════════════════════════════ Listas de índices ══════════════════ -->
 \tableofcontents
 \newpage
@@ -93,69 +95,66 @@ name & idcode \\
 | 3 (Graduado universitario) | 2 | 85, 93 | 178 |
 | **Totales** | **7** | | **553** |
 
-### a) Escribe en forma matricial el modelo. <!--[cite: 1] -->
-
-$$y = X\beta + \varepsilon$$
-
-$$\begin{bmatrix} 74 \\ 68 \\ 77 \\ 76 \\ 80 \\ 85 \\ 93 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \\ 1 & 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} \mu \\ \alpha_1 \\ \alpha_2 \\ \alpha_3 \end{bmatrix} + \begin{bmatrix} \varepsilon_{11} \\ \varepsilon_{12} \\ \varepsilon_{13} \\ \varepsilon_{21} \\ \varepsilon_{22} \\ \varepsilon_{31} \\ \varepsilon_{32} \end{bmatrix}$$
+**a) Escribe en forma matricial el modelo.**
 
 ```{r}
-#[cite: 9]
 consumo <- c(74, 68, 77, 76, 80, 85, 93)
-educacion <- c("1", "1", "1", "2", "2", "3", "3")
+educacion <- factor(c("1", "1", "1", "2", "2", "3", "3"))
 
-datos <- data.frame(educacion, consumo)
-datos$educacion <- as.factor(datos$educacion)
-datos
-
-# Matriz de diseño
-modelo <- lm(consumo ~ educacion - 1, data = datos)
-X <- model.matrix(modelo)
-X <- cbind(Intercepto = rep(1, length(consumo)), X)
+X <- cbind(1, model.matrix(consumo ~ educacion - 1))
 colnames(X) <- NULL
-X
+y <- as.matrix(consumo)
 
-y <- as.matrix(consumo); y
+X; y
 ```
 
-### b) Encuentre una solución particular de la ecuación normal. <!--[cite: 1] -->
+$$y = X\beta + e$$
 
-$$(X^TX)b = X^Ty$$
-$$\hat{b} = (X^TX)^- X^Ty$$
+$$\begin{bmatrix} 74 \\ 68 \\ 77 \\ 76 \\ 80 \\ 85 \\ 93 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \\ 1 & 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} \mu \\ \alpha_1 \\ \alpha_2 \\ \alpha_3 \end{bmatrix} + \begin{bmatrix} e_{11} \\ e_{12} \\ e_{13} \\ e_{21} \\ e_{22} \\ e_{31} \\ e_{32} \end{bmatrix}$$
+
+**b) Encuentre una solución particular de la ecuación normal.**
+
+$$(X^TX)b = X^Ty \qquad \Rightarrow \qquad \hat{b} = (X^TX)^- X^Ty$$
+
+```{r invg, echo=FALSE}
+invg <- function(A) {
+  p <- ncol(A); r <- qr(A)$rank; n <- p - r
+  G <- matrix(0, p, p)
+  G[(n + 1):p, (n + 1):p] <- solve(A[-(1:n), -(1:n)])
+  G
+}
+```
+
+```{r}
+A <- t(X) %*% X
+G <- invg(A)
+b0 <- G %*% t(X) %*% y
+
+A; fractions(G); b0
+```
 
 $$\hat{\beta} = \begin{bmatrix} \hat{\mu} \\ \hat{\alpha}_1 \\ \hat{\alpha}_2 \\ \hat{\alpha}_3 \end{bmatrix} = \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 1 & 1 & 1 & 1 & 1 & 1 & 1 \\ 1 & 1 & 1 & 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 1 & 1 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 1 & 1 \end{bmatrix} \begin{bmatrix} 74 \\ 68 \\ 77 \\ 76 \\ 80 \\ 85 \\ 93 \end{bmatrix} = \begin{bmatrix} 0 \\ 73 \\ 78 \\ 89 \end{bmatrix}$$
 
+**c) ¿El consumo de calorías diarias es igual para cada nivel de educación? (Tabla de Anova)**
+
 ```{r}
-#[cite: 9]
-# Cálculo de la inversa generalizada
-invg <- function(X) {
-  p <- ncol(A) # Número de columnas (dimensión de A)
-  r <- qr(A)$rank # Rango de X'X
-  n <- p - r # Número de filas/columnas dependientes
-  m <- n + 1
-  A_reducida <- A[-(1:n), -(1:n)] # Extraer submatriz no singular
-  D_inv <- solve(A_reducida) # Inversa de la parte no singular
-  G <- matrix(0, nrow = p, ncol = p) # Inicializar matriz G con ceros
-  G[m:p, m:p] <- D_inv # Insertar la inversa en el bloque inferior derecho
-  return(G)
-}
+n <- length(y); r <- qr(X)$rank
+SCReg <- as.numeric(t(y) %*% X %*% b0)
+SCTotal <- as.numeric(t(y) %*% y)
+SCMedia <- n * mean(y)^2
+SCResid <- SCTotal - SCReg
+SCReg_m <- SCReg - SCMedia
+s2 <- SCResid / (n - r)
+CMReg_m <- SCReg_m / (r - 1)
+Fcal <- CMReg_m / s2
+Fcrit <- qf(0.95, r - 1, n - r)
 
-A <- t(X) %*% X; A
-
-library(MASS)
-G <- invg(A); fractions(G)
-
-# b. Encuentre una solución particular de la ecuación normal.
-b0 <- G %*% t(X) %*% y; b0
+n; r
+SCReg; SCTotal; SCMedia; SCResid; SCReg_m
+s2; CMReg_m; Fcal; Fcrit
 ```
 
-### c) ¿El consumo de calorías diarias es igual para cada nivel de educación? (Tabla de Anova) <!--[cite: 1] -->
-
-$$SCReg = y^TX(X^TX)^-X^Ty = 43997$$
-$$SCTotal = y^Ty = 44079$$
-$$SCMedia = n\bar{y}^2 = 7(79)^2 = 43687$$
-$$SCResid = y^Ty - y^TX(X^TX)^-X^Ty = 82$$
-$$SCReg_m = 43997 - 43687 = 310$$
+$$\begin{aligned} SCReg &= y^TX(X^TX)^-X^Ty = 43997 \\ SCTotal &= y^Ty = 44079 \\ SCMedia &= n \cdot \bar{y}^2 = 7(79)^2 = 43687 \\ SCResid &= y^Ty - y^TX(X^TX)^-X^Ty = 82 \\ SCReg_m &= 43997 - 43687 = 310 \end{aligned}$$
 
 | FV | GL | SC | CM | $F_c$ |
 | :--- | :---: | :---: | :---: | :---: |
@@ -165,619 +164,427 @@ $$SCReg_m = 43997 - 43687 = 310$$
 
 $$F_{0.95, 2, 4} = 6.944272$$
 
-$$H_0: \mu_1 = \mu_2 = \mu_3 = \mu$$
-$$H_1: \text{Al menos un } \mu_i \text{ es diferente de } \mu, \quad i = 1, 2, 3$$
-$$\alpha = 0.05$$
-$$F_c = 7.561 > F_{0.95, 2, 4} = 6.944272, \text{ se rechaza } H_0.$$
+$$\begin{aligned} H_0 &: \mu_1 = \mu_2 = \mu_3 = \mu \\ H_1 &: \text{Al menos un } \mu_i \text{ es diferente de } \mu, \quad i = 1, 2, 3 \\ \alpha &= 0.05 \\ F_c &= 7.561 > F_{0.95, 2, 4} = 6.944272 \implies \text{Se rechaza } H_0. \end{aligned}$$
 
 A un $\alpha = 0.05$, se rechaza $H_0$. Por lo tanto, al menos un consumo medio de calorías diarias difiere significativamente respecto a los demás niveles de educación.
 
-```{r}
-#[cite: 9]
-# c. ANOVA
-n <- length(y); n
-
-SCReg <- t(y) %*% X %*% G %*% t(X) %*% y; SCReg
-
-SCTotal <- t(y) %*% y; SCTotal
-
-SCMedia <- n*mean(y)^2; SCMedia
-
-SCResid <- SCTotal - SCReg; SCResid
-
-SCReg_m <- SCReg - SCMedia; SCReg_m
-
-s2 <- SCResid/(n - qr(X)$rank); s2
-
-CMReg_m <- SCReg_m/(qr(X)$rank - 1); CMReg_m
-
-Fcal <- CMReg_m/s2; Fcal
-
-qf(0.95, qr(X)$rank - 1, n - qr(X)$rank)
-```
-
-### d) ¿Es estimable $\mu + \alpha_1$? Y si es así, calcule su B.L.U.E (Media y Varianza) e intervalo de confianza. <!--[cite: 2] -->
+**d) ¿Es estimable $\mu + \alpha_1$? Y si es así, calcule su B.L.U.E (Media y Varianza) e intervalo de confianza.**
 
 $$\mu + \alpha_1 = \begin{bmatrix} 1 & 1 & 0 & 0 \end{bmatrix} \beta \quad ; \quad \lambda^T = \begin{bmatrix} 1 & 1 & 0 & 0 \end{bmatrix}$$
 
-- Verificando estimabilidad: $\lambda^T H = \lambda^T, \quad H = (X^TX)^- X^TX$
+```{r}
+l <- c(1, 1, 0, 0)
+H <- G %*% A
+media_d <- as.numeric(t(l) %*% b0)
+var_d <- as.numeric(s2 * (t(l) %*% G %*% l))
+t_crit <- qt(0.975, n - r)
+ic_d <- media_d + c(-1, 1) * t_crit * sqrt(var_d)
+
+H; media_d; var_d; t_crit; ic_d
+```
+
+- Verificando estimabilidad: $\lambda^T H = \lambda^T$, donde $H = (X^TX)^- X^TX$:
 
 $$\begin{bmatrix} 1 & 1 & 0 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 & 0 \end{bmatrix}$$
 
-Se cumple la condición, por lo tanto, $\mu + \alpha_1$ es estimable.
+Se cumple la condición; por lo tanto, $\mu + \alpha_1$ es estimable.
 
 - Media:
 
 $$\text{MEDIA} = \lambda^T \hat{\beta} = \begin{bmatrix} 1 & 1 & 0 & 0 \end{bmatrix} \begin{bmatrix} 0 \\ 73 \\ 78 \\ 89 \end{bmatrix} = 73$$
 
-- Varianza:
-
-$$Var[\lambda^T \hat{\beta}] = \hat{\sigma}^2 \lambda^T (X^TX)^- \lambda$$
-
-$$(X^TX)^- = \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \quad ; \quad s^2 = CMError = 20.5$$
+- Varianza: $Var[\lambda^T \hat{\beta}] = \hat{\sigma}^2 \lambda^T (X^TX)^- \lambda$, con $s^2 = CMError = 20.5$:
 
 $$(20.5) \begin{bmatrix} 1 & 1 & 0 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 1 \\ 1 \\ 0 \\ 0 \end{bmatrix} = 6.833333$$
 
 - Intervalo de confianza: $\lambda^T \hat{\beta} \mp t_{(1 - \alpha/2, GLE)} \hat{\sigma} \sqrt{\lambda^T (X^TX)^- \lambda}$
 
-$$LI = 73 - 2.776445 \sqrt{6.833333} = 65.74219$$
-$$LS = 73 + 2.776445 \sqrt{6.833333} = 80.25781$$
-$$IC(95\%) = [65.74219, 80.25781]$$
+$$\begin{aligned} LI &= 73 - 2.776445 \sqrt{6.833333} = 65.74219 \\ LS &= 73 + 2.776445 \sqrt{6.833333} = 80.25781 \\ IC(95\%) &= [65.74219, 80.25781] \end{aligned}$$
 
-```{r}
-#[cite: 9]
-# d. Es estimable \mu + \alpha_1? Y si es así, calcule su B.L.U.E (Media y
-# Varianza) e intervalo de confianza
-l <- matrix(c(1, 1, 0, 0), nrow = 4); l
+**e) Calcule la estadística $F$ para contrastar $H_0: \alpha_2 - \alpha_1 = 9$ y $2\alpha_3 - \alpha_1 - \alpha_2 = 30$.**
 
-H <- G %*% t(X) %*% X; H
+$$\begin{aligned} H_0 &: -\alpha_1 + \alpha_2 = 9 \\ H_0 &: -\alpha_1 - \alpha_2 + 2\alpha_3 = 30 \end{aligned}$$
 
-all.equal(t(l), t(l) %*% H)
+$$\Lambda = \begin{bmatrix} 0 & -1 & 1 & 0 \\ 0 & -1 & -1 & 2 \end{bmatrix} \qquad d = \begin{bmatrix} 9 \\ 30 \end{bmatrix}$$
 
-# Media
-t(l) %*% b0
-
-# Varianza
-s2 %*% (t(l) %*% G %*% l)
-
-# Intervalo de confianza
-qt(0.975, n - qr(X)$rank)
-
-LI <- (t(l) %*% b0) - qt(0.975, n - 
-                           qr(X)$rank) * sqrt(s2 %*% (t(l) %*% G %*% l))
-LI
-
-LS <- (t(l) %*% b0) + qt(0.975, n - 
-                           qr(X)$rank) * sqrt(s2 %*% (t(l) %*% G %*% l))
-LS
-```
-
-### e) Calcule la estadística $F$ para contrastar $H_0: \alpha_2 - \alpha_1 = 9$ y $2\alpha_3 - \alpha_1 - \alpha_2 = 30$. <!--[cite: 2, 3] -->
-
-$$H_0: -\alpha_1 + \alpha_2 = 9$$
-$$H_0: -\alpha_1 - \alpha_2 + 2\alpha_3 = 30$$
-
-$$\Lambda = \begin{bmatrix} 0 & -1 & 1 & 0 \\ 0 & -1 & -1 & 2 \end{bmatrix} \quad d = \begin{bmatrix} 9 \\ 30 \end{bmatrix}$$
-
-- $\Lambda H = \Lambda$:
+- Condición de estimabilidad $\Lambda H = \Lambda$:
 
 $$\begin{bmatrix} 0 & -1 & 1 & 0 \\ 0 & -1 & -1 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & -1 & 1 & 0 \\ 0 & -1 & -1 & 2 \end{bmatrix}$$
 
-- $r(\Lambda) = 2$
+- Rango: $r(\Lambda) = 2$. Se cumplen ambas condiciones; por lo tanto, $\Lambda$ es estimable.
 
-Se cumplen ambas condiciones. Por lo tanto, $\Lambda$ es estimable.
+```{r}
+Lambda_e <- matrix(c(0, -1,  1, 0,
+                     0, -1, -1, 2), nrow = 2, byrow = TRUE)
+d_e <- c(9, 30)
+
+SCH0_e <- as.numeric(t(Lambda_e %*% b0 - d_e) %*%
+                       solve(Lambda_e %*% G %*% t(Lambda_e)) %*%
+                       (Lambda_e %*% b0 - d_e))
+Fcal_e <- SCH0_e / (2 * s2)
+Fcrit_e <- qf(0.95, 2, n - r)
+
+SCH0_e; Fcal_e; Fcrit_e
+```
 
 $$SCH_0 = (\Lambda \hat{b} - d)^T (\Lambda G \Lambda^T)^{-1} (\Lambda \hat{b} - d) = 24.35714$$
 
-$$F_{cal} = \frac{SCH_0}{2s^2} = \frac{24.35714}{2(20.5)} = 0.5940767 \quad ; \quad F_{0.95, 2, 4} = 6.944272$$
+$$F_{cal} = \frac{SCH_0}{2s^2} = \frac{24.35714}{2(20.5)} = 0.5940767 \qquad F_{0.95, 2, 4} = 6.944272$$
 
 A un $\alpha = 0.05$, no se rechaza $H_0$.
 
-```{r}
-#[cite: 9]
-# e.
-Lambda <- matrix(c(0, -1, 1, 0,
-                   0, -1, -1, 2), nrow = 2, byrow = TRUE); Lambda
+**f) Contrastar la hipótesis $H_0: 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 = 0$.**
 
-d <- matrix(c(9, 30), nrow = 2); d
+$$\begin{aligned} H_0 &: 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 = 0 \\ H_1 &: 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 \neq 0 \end{aligned}$$
 
-# Ver si es estimable
-all.equal(Lambda %*% H, Lambda)
+$$\lambda^T = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \qquad d = [0]$$
 
-qr(Lambda)$rank
-
-SCH0 <- t(Lambda %*% b0 - d) %*% solve(Lambda %*% G %*% t(Lambda)) %*%
-  (Lambda %*% b0 - d); SCH0
-
-Fcal <- SCH0/(2 * s2); Fcal
-Fcrit <- qf(0.95, 2, n - qr(X)$rank); Fcrit
-```
-
-### f) Contrastar la hipótesis $H_0: 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 = 0$. <!--[cite: 3] -->
-
-$$H_0: 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 = 0$$
-$$H_1: 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 \neq 0$$
-
-$$\lambda^T = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \quad d = [0]$$
-
-- $\lambda^T H = \lambda^T$:
+- Condición $\lambda^T H = \lambda^T$:
 
 $$\begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix}$$
 
-Se cumple la condición, $7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3$ es estimable.
+Se cumple la condición; $7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3$ es estimable.
+
+```{r}
+Lambdaf <- matrix(c(7, 3, 2, 2), nrow = 1)
+
+SCH0_f <- as.numeric(t(Lambdaf %*% b0) %*%
+                       solve(Lambdaf %*% G %*% t(Lambdaf)) %*%
+                       (Lambdaf %*% b0))
+Fcal_f <- SCH0_f / s2
+Fcrit_f <- qf(0.95, 1, n - r)
+
+SCH0_f; Fcal_f; Fcrit_f
+```
 
 $$SCH_0 = (\lambda^T \hat{b} - d)^T (\lambda^T G \lambda)^{-1} (\lambda^T \hat{b} - d) = 43687$$
 
-$$F_{cal} = \frac{SCH_0}{s^2} = \frac{43687}{20.5} = 2131.073 \quad ; \quad F_{0.95, 1, 4} = 7.708647$$
+$$F_{cal} = \frac{SCH_0}{s^2} = \frac{43687}{20.5} = 2131.073 \qquad F_{0.95, 1, 4} = 7.708647$$
 
 A un $\alpha = 0.05$, se rechaza $H_0$.
 
-```{r}
-#[cite: 9]
-# f.
-Lambdaf <- matrix(c(7, 3, 2, 2), nrow = 1, byrow = TRUE); Lambdaf
+**g) Contraste: $H_0: \alpha_1 - \alpha_2 = \alpha_1 - \alpha_3 = 0$.**
 
-# Ver si es estimable
-all.equal(Lambdaf %*% H, Lambdaf)
+$$\Lambda = \begin{bmatrix} 0 & 1 & -1 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix} \qquad d = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$$
 
-qr(Lambdaf)$rank
-
-SCH0_f <- t(Lambdaf %*% b0) %*% solve(Lambdaf %*% G %*% t(Lambdaf)) %*%
-  (Lambdaf %*% b0); SCH0_f
-
-Fcal_f <- SCH0_f/(1 * s2); Fcal_f
-Fcrit_f <- qf(0.95, 1, n - qr(X)$rank); Fcrit_f
-```
-
-### g) Contraste: $H_0: \alpha_1 - \alpha_2 = \alpha_1 - \alpha_3 = 0$. <!--[cite: 9] -->
-
-$$\Lambda = \begin{bmatrix} 0 & 1 & -1 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix} \quad d = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$$
-
-- $\Lambda H = \Lambda$:
+- Condición $\Lambda H = \Lambda$ y $r(\Lambda) = 2$:
 
 $$\begin{bmatrix} 0 & 1 & -1 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & 1 & -1 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix}$$
 
-- $r(\Lambda) = 2$
+```{r}
+Lambdag <- matrix(c(0, 1, -1,  0,
+                    0, 1,  0, -1), nrow = 2, byrow = TRUE)
 
-Se cumplen ambas condiciones, por lo tanto $\Lambda$ es estimable.
+SCH0_g <- as.numeric(t(Lambdag %*% b0) %*%
+                       solve(Lambdag %*% G %*% t(Lambdag)) %*%
+                       (Lambdag %*% b0))
+Fcal_g <- SCH0_g / (2 * s2)
+Fcrit_g <- qf(0.95, 2, n - r)
+
+SCH0_g; Fcal_g; Fcrit_g
+```
 
 $$SCH_0 = (\Lambda \hat{b} - d)^T (\Lambda G \Lambda^T)^{-1} (\Lambda \hat{b} - d) = 310$$
 
-$$F_{cal} = \frac{SCH_0}{2s^2} = \frac{310}{2(20.5)} = 7.560976 \quad ; \quad F_{0.95, 2, 4} = 6.944272$$
+$$F_{cal} = \frac{SCH_0}{2s^2} = \frac{310}{2(20.5)} = 7.560976 \qquad F_{0.95, 2, 4} = 6.944272$$
 
 A un $\alpha = 0.05$, se rechaza $H_0$.
 
+**h) Pruebe si $7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3$; $\alpha_1 - \alpha_2$ y $\alpha_1 - \alpha_3$ son ortogonales e independientes.**
+
+$$\begin{cases} 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 \\ \alpha_1 - \alpha_2 \\ \alpha_1 - \alpha_3 \end{cases} \qquad \begin{aligned} \lambda_1^T &= \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \\ \lambda_2^T &= \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \\ \lambda_3^T &= \begin{bmatrix} 0 & 1 & 0 & -1 \end{bmatrix} \end{aligned}$$
+
 ```{r}
-#[cite: 9]
-# g.
-Lambdag <- matrix(c(0, 1, -1, 0,
-                    0, 1, 0, -1), nrow = 2, byrow = TRUE); Lambdag
+Lambdah <- matrix(c(7, 3,  2,  2,
+                    0, 1, -1,  0,
+                    0, 1,  0, -1), nrow = 3, byrow = TRUE)
 
-# Ver si es estimable
-all.equal(Lambdag %*% H, Lambdag)
+rango_h <- qr(Lambdah)$rank
+ortog_h <- Lambdah %*% G %*% t(Lambdah)
 
-qr(Lambdag)$rank
-
-SCH0_g <- t(Lambdag %*% b0) %*% solve(Lambdag %*% G %*% t(Lambdag)) %*%
-  (Lambdag %*% b0); SCH0_g
-
-Fcal_g <- SCH0_g/(2 * s2); Fcal_g
-Fcrit_g <- qf(0.95, 2, n - qr(X)$rank); Fcrit_g
+rango_h; fractions(ortog_h)
 ```
 
-### h) Pruebe si $7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3$; $\alpha_1 - \alpha_2$ y $\alpha_1 - \alpha_3$ son ortogonales e independientes. <!--[cite: 3, 4] -->
+$$\lambda_1^T H = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix}$$
 
-$$\begin{cases} 7\mu + 3\alpha_1 + 2\alpha_2 + 2\alpha_3 \\ \alpha_1 - \alpha_2 \\ \alpha_1 - \alpha_3 \end{cases} \quad \begin{aligned} \lambda_1^T &= \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \\ \lambda_2^T &= \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \\ \lambda_3^T &= \begin{bmatrix} 0 & 1 & 0 & -1 \end{bmatrix} \end{aligned}$$
+$$\lambda_2^T H = \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix}$$
 
-$$\lambda_1^T = \lambda_1^T H \quad \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix}$$
+$$\lambda_3^T H = \begin{bmatrix} 0 & 1 & 0 & -1 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & 1 & 0 & -1 \end{bmatrix}$$
 
-$$\lambda_2^T = \lambda_2^T H \quad \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix}$$
-
-$$\lambda_3^T = \lambda_3^T H \quad \begin{bmatrix} 0 & 1 & 0 & -1 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & 1 & 0 & -1 \end{bmatrix}$$
-
-Cada $\lambda_i^T$ es estimable.
-
-- $r(\Lambda) = 3$, son linealmente independientes.
+Cada $\lambda_i^T$ es estimable y $r(\Lambda) = 3$, por lo que son linealmente independientes. Evaluando la condición de ortogonalidad $\lambda_i^T G \lambda_j$:
 
 $$\lambda_1^T G \lambda_2 = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ -1 \\ 0 \end{bmatrix} = 0$$
 
 $$\lambda_1^T G \lambda_3 = \begin{bmatrix} 7 & 3 & 2 & 2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ 0 \\ -1 \end{bmatrix} = 0$$
 
-$$\lambda_2^T G \lambda_3 = \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ 0 \\ -1 \end{bmatrix} = \frac{1}{3} \neq 0$$
-
-```{r}
-#[cite: 9]
-# h.
-Lambdah1 <- matrix(c(7, 3, 2, 2), nrow = 4); Lambdah1
-Lambdah2 <- matrix(c(0, 1, -1, 0), nrow = 4); Lambdah2
-Lambdah3 <- matrix(c(0, 1, 0, -1), nrow = 4); Lambdah3
-
-Lambdah <- matrix(c(Lambdah1, Lambdah2, Lambdah3), nrow = 3, byrow = TRUE)
-Lambdah
-
-## 1. Estimabilidad
-all.equal(t(Lambdah1), t(Lambdah1) %*% H)
-all.equal(t(Lambdah2), t(Lambdah2) %*% H)
-all.equal(t(Lambdah3), t(Lambdah3) %*% H)
-
-# Independencia Lineal
-qr(Lambdah)$rank
-
-# 2. Ortogonalidad
-t(Lambdah1) %*% G %*% Lambdah2
-t(Lambdah1) %*% G %*% Lambdah3
-t(Lambdah2) %*% G %*% Lambdah1
-t(Lambdah2) %*% G %*% Lambdah3
-t(Lambdah3) %*% G %*% Lambdah1
-t(Lambdah3) %*% G %*% Lambdah2
-```
-
----
+$$\lambda_2^T G \lambda_3 = \begin{bmatrix} 0 & 1 & -1 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ 0 \\ -1 \end{bmatrix} = \frac{1}{3}$$
 
 ## Ejercicio 2
 
-**2.** Supón que la población de una comunidad consiste en un 12 % que no completó la educación secundaria y un 68 % que sí lo hizo, siendo el resto graduados de la universidad. Con los datos de la Tabla 5.4, encuentra: <!--[cite: 4] -->
+**2.** Supón que la población de una comunidad consiste en un 12 % que no completó la educación secundaria y un 68 % que sí lo hizo, siendo el resto graduados de la universidad. Con los datos de la Tabla 5.4, encuentra:
 
-$$0.12 : \text{NIVEL } 1 \ (\mu + \alpha_1)$$
-$$0.68 : \text{NIVEL } 2 \ (\mu + \alpha_2)$$
-$$0.20 : \text{NIVEL } 3 \ (\mu + \alpha_3)$$
+$$\begin{aligned} 0.12 &: \text{NIVEL } 1 \ (\mu + \alpha_1) \\ 0.68 &: \text{NIVEL } 2 \ (\mu + \alpha_2) \\ 0.20 &: \text{NIVEL } 3 \ (\mu + \alpha_3) \end{aligned}$$
 
-$$\lambda^T \beta = (0.12 + 0.68 + 0.20)\mu + 0.12\alpha_1 + 0.68\alpha_2 + 0.20\alpha_3$$
-$$\lambda^T \beta = \mu + 0.12\alpha_1 + 0.68\alpha_2 + 0.20\alpha_3$$
-$$\lambda^T \beta = \begin{bmatrix} 1 & 0.12 & 0.68 & 0.2 \end{bmatrix} \beta$$
+$$\begin{aligned} \lambda^T \beta &= (0.12 + 0.68 + 0.20)\mu + 0.12\alpha_1 + 0.68\alpha_2 + 0.20\alpha_3 \\ \lambda^T \beta &= \mu + 0.12\alpha_1 + 0.68\alpha_2 + 0.20\alpha_3 = \begin{bmatrix} 1 & 0.12 & 0.68 & 0.2 \end{bmatrix} \beta \end{aligned}$$
 
-### a) la media poblacional estimada del índice; <!--[cite: 4] -->
+```{r}
+lambda2_0 <- c(1, 0.12, 0.68, 0.20)
+media2 <- as.numeric(t(lambda2_0) %*% b0)
+var2 <- as.numeric(s2 * (t(lambda2_0) %*% G %*% lambda2_0))
+ic2 <- media2 + c(-1, 1) * qt(0.975, n - r) * sqrt(var2)
+
+media2; var2; ic2
+```
+
+**a) la media poblacional estimada del índice;**
 
 $$\lambda^T \hat{\beta} = \begin{bmatrix} 1 & 0.12 & 0.68 & 0.2 \end{bmatrix} \begin{bmatrix} 0 \\ 73 \\ 78 \\ 89 \end{bmatrix} = 79.6$$
 
-```{r}
-#[cite: 9]
-# 2.a. Media poblacional estimada (\lambda^T \hat{b})
-lambda2_0 <- matrix(c(1, 0.12, 0.68, 0.20), nrow = 4); lambda2_0 
+**b) la varianza estimada del estimador en (a);**
 
-mediaestimada2 <- t(lambda2_0) %*% b0; mediaestimada2
-```
+$$Var(\lambda^T \hat{\beta}) = \hat{\sigma}^2 \lambda^T (X^TX)^- \lambda = (20.5) \begin{bmatrix} 1 & 0.12 & 0.68 & 0.2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 1 \\ 0.12 \\ 0.68 \\ 0.2 \end{bmatrix} = 5.248$$
 
-### b) la varianza estimada del estimador en (a); <!--[cite: 4] -->
+**c) el intervalo de confianza simétrico al 95 % para el promedio poblacional;**
 
-$$Var(\lambda^T \hat{\beta}) = \hat{\sigma}^2 \lambda^T (X^TX)^- \lambda$$
+$$\begin{aligned} LI &= 79.6 - 2.776445 \sqrt{5.248} = 73.23958 \\ LS &= 79.6 + 2.776445 \sqrt{5.248} = 85.96042 \\ IC(95\%) &= [73.23958 ; 85.96042] \end{aligned}$$
 
-$$(20.5) \begin{bmatrix} 1 & 0.12 & 0.68 & 0.2 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 1 \\ 0.12 \\ 0.68 \\ 0.2 \end{bmatrix} = 5.248$$
+**d) la estadística $F$ para contrastar la hipótesis $H_0: \mu + \alpha_1 = 70$ y $\alpha_1 = \alpha_3 - 15$;**
 
-```{r}
-#[cite: 9]
-# 2.b. Varianza estimada del estimador
-varestimada2 <- s2 %*% t(lambda2_0) %*% G %*% lambda2_0; varestimada2
-```
+$$\Lambda = \begin{bmatrix} 1 & 1 & 0 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix} \qquad d = \begin{bmatrix} 70 \\ -15 \end{bmatrix}$$
 
-### c) el intervalo de confianza simétrico al 95 % para el promedio poblacional; <!--[cite: 4] -->
-
-$$LI = 79.6 - 2.776445 \sqrt{5.248} = 73.23958$$
-$$LS = 79.6 + 2.776445 \sqrt{5.248} = 85.96042$$
-$$IC(95\%) = [73.23958 ; 85.96042]$$
-
-```{r}
-#[cite: 9]
-# 2.c. Intervalo de confianza simétrico al 95% para el promedio poblacional
-n <- length(y); n
-mediaestimada2 - qt(1 - 0.05/2, n - qr(X)$rank)*sqrt(varestimada2)
-mediaestimada2 + qt(1 - 0.05/2, n - qr(X)$rank)*sqrt(varestimada2)
-```
-
-### d) la estadística $F$ para contrastar la hipótesis $H_0: \mu + \alpha_1 = 70$ y $\alpha_1 = \alpha_3 - 15$; <!--[cite: 4, 5] -->
-
-$$\Lambda = \begin{bmatrix} 1 & 1 & 0 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix} \quad d = \begin{bmatrix} 70 \\ -15 \end{bmatrix}$$
-
-- $\Lambda H = \Lambda$:
+- Condición $\Lambda H = \Lambda$:
 
 $$\begin{bmatrix} 1 & 1 & 0 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 & 0 \\ 0 & 1 & 0 & -1 \end{bmatrix}$$
 
-- $r(\Lambda) = 2$
+- Rango: $r(\Lambda) = 2$. Se cumplen ambas condiciones; por lo tanto, $\Lambda$ es estimable.
 
-Se cumplen ambas condiciones. Por lo tanto, $\Lambda$ es estimable.
+```{r}
+Lambda_2d <- matrix(c(1, 1, 0,  0,
+                      0, 1, 0, -1), nrow = 2, byrow = TRUE)
+d_2d <- c(70, -15)
+
+SCH0_2d <- as.numeric(t(Lambda_2d %*% b0 - d_2d) %*%
+                        solve(Lambda_2d %*% G %*% t(Lambda_2d)) %*%
+                        (Lambda_2d %*% b0 - d_2d))
+Fcal_2d <- SCH0_2d / (2 * s2)
+Fcrit_2d <- qf(0.95, 2, n - r)
+
+SCH0_2d; Fcal_2d; Fcrit_2d
+```
 
 $$SCH_0 = (\Lambda \hat{b} - d)^T (\Lambda G \Lambda^T)^{-1} (\Lambda \hat{b} - d) = 59$$
 
-$$F_{cal} = \frac{SCH_0}{2(20.5)} = \frac{59}{41} = 1.439024 \quad ; \quad F_{0.95, 2, 4} = 6.944272$$
+$$F_{cal} = \frac{SCH_0}{2(20.5)} = \frac{59}{41} = 1.439024 \qquad F_{0.95, 2, 4} = 6.944272$$
 
 A un $\alpha = 0.05$, no se rechaza $H_0$.
 
+**e) un contraste que sea ortogonal a $4\alpha_1 - 3\alpha_2 - \alpha_3$; contrasta la hipótesis de que tanto este como $4\alpha_1 - 3\alpha_2 - \alpha_3$ son cero.**
+
+$$\lambda_1^T = \begin{bmatrix} 0 & 4 & -3 & -1 \end{bmatrix} \qquad \lambda_2^T = \begin{bmatrix} 0 & f_1 & f_2 & f_3 \end{bmatrix}$$
+
+- $f_1 + f_2 + f_3 = 0 \implies f_3 = -f_1 - f_2$
+- Condición de ortogonalidad $\lambda_1^T G \lambda_2 = 0$:
+
+$$\lambda_1^T G \lambda_2 = \begin{bmatrix} 0 & 4 & -3 & -1 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ f_1 \\ f_2 \\ f_3 \end{bmatrix} = \frac{4f_1}{3} - \frac{3f_2}{2} - \frac{f_3}{2} = 0$$
+
+- $8f_1 - 9f_2 - 3f_3 = 0 \implies 8f_1 - 9f_2 + 3f_1 + 3f_2 = 11f_1 - 6f_2 = 0$, de donde $f_1 = 6$, $f_2 = 11$, $f_3 = -17$.
+
+$$\Lambda = \begin{bmatrix} 0 & 4 & -3 & -1 \\ 0 & 6 & 11 & -17 \end{bmatrix} \qquad d = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$$
+
 ```{r}
-#[cite: 9]
-# 2.d.
-Lambda_2d <- matrix(c(1, 1, 0, 0,
-                      0, 1, 0, -1), nrow = 2, byrow = TRUE); Lambda_2d
+l1_2e <- c(0, 4, -3, -1)
+l2_2e <- c(0, 6, 11, -17)
 
-d_2d <- matrix(c(70, -15), nrow = 2); d_2d
+SCH1_2e <- as.numeric((t(l1_2e) %*% b0)^2 / (t(l1_2e) %*% G %*% l1_2e))
+SCH2_2e <- as.numeric((t(l2_2e) %*% b0)^2 / (t(l2_2e) %*% G %*% l2_2e))
+SCH0_2e <- SCH1_2e + SCH2_2e
+Fcal_2e <- SCH0_2e / (2 * s2)
+Fcrit_2e <- qf(0.95, 2, n - r)
 
-# Ver si es estimable
-all.equal(Lambda_2d %*% H, Lambda_2d)
-
-qr(Lambda_2d)$rank
-
-SCH0_2d <- t(Lambda_2d %*% b0 - d_2d) %*% solve(Lambda_2d %*% G %*% t(Lambda_2d)) %*%
-  (Lambda_2d %*% b0 - d_2d); SCH0_2d
-
-Fcal_2d <- SCH0_2d/(2 * s2); Fcal_2d
-Fcrit_2d <- qf(0.95, 2, n - qr(X)$rank); Fcrit_2d
+SCH1_2e; SCH2_2e; SCH0_2e; Fcal_2e; Fcrit_2e
 ```
 
-### e) un contraste que sea ortogonal a $4\alpha_1 - 3\alpha_2 - \alpha_3$; contrasta la hipótesis de que tanto este como $4\alpha_1 - 3\alpha_2 - \alpha_3$ son cero. <!--[cite: 5] -->
-
-$$\lambda_1^T = \begin{bmatrix} 0 & 4 & -3 & -1 \end{bmatrix} \quad \lambda_2^T = \begin{bmatrix} 0 & f_1 & f_2 & f_3 \end{bmatrix}$$
-
-- $f_1 + f_2 + f_3 = 0 \rightarrow f_3 = -f_1 - f_2$
-- $\lambda_1^T G \lambda_2 = \begin{bmatrix} 0 & 4 & -3 & -1 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 \\ 0 & 1/3 & 0 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ f_1 \\ f_2 \\ f_3 \end{bmatrix} = \frac{4f_1}{3} - \frac{3f_2}{2} - \frac{f_3}{2} = 0$
-- $8f_1 - 9f_2 - 3f_3 = 0 \rightarrow 8f_1 - 9f_2 + 3f_1 + 3f_2 = 11f_1 - 6f_2 = 0$
-  - $f_1 = 6$
-  - $f_2 = 11$
-  - $f_3 = -17$
-
-$$SCH_1 = \frac{(\lambda_1^T \hat{b})^2}{\lambda_1^T G \lambda_1} = \frac{(-31)^2}{31/3} = 93$$
-$$SCH_2 = \frac{(\lambda_2^T \hat{b})^2}{\lambda_2^T G \lambda_2} = \frac{(-217)^2}{217} = 217$$
-
-$$SCH_1 + SCH_2 = 310 = SCReg \quad \therefore \text{Cumple la ortogonalidad e independencia lineal}$$
+$$\begin{aligned} SCH_1 &= \frac{(\lambda_1^T \hat{b})^2}{\lambda_1^T G \lambda_1} = \frac{(-31)^2}{31/3} = 93 \\ SCH_2 &= \frac{(\lambda_2^T \hat{b})^2}{\lambda_2^T G \lambda_2} = \frac{(-217)^2}{217} = 217 \\ SCH_1 + SCH_2 &= 310 = SCReg_m \quad \therefore \text{Cumple la ortogonalidad e independencia lineal} \end{aligned}$$
 
 $$SCH_0 = (\Lambda \hat{b} - d)^T (\Lambda G \Lambda^T)^{-1} (\Lambda \hat{b} - d) = 310$$
 
-$$\Lambda = \begin{bmatrix} 0 & 4 & -3 & -1 \\ 0 & 6 & 11 & -17 \end{bmatrix} \quad d = \begin{bmatrix} 0 \\ 0 \end{bmatrix}$$
-
-$$F_{cal} = \frac{310}{2(20.5)} = \frac{155}{20.5} = 7.561 \quad ; \quad F_{0.95, 2, 4} = 6.944272$$
+$$F_{cal} = \frac{310}{2(20.5)} = \frac{155}{20.5} = 7.561 \qquad F_{0.95, 2, 4} = 6.944272$$
 
 A un $\alpha = 0.05$, se rechaza $H_0$.
 
-```{r}
-#[cite: 5, 9]
-# 2.e.
-lambda1_2e <- matrix(c(0, 4, -3, -1), nrow = 4)
-lambda2_2e <- matrix(c(0, 6, 11, -17), nrow = 4)
-
-# Verificación de ortogonalidad
-t(lambda1_2e) %*% G %*% lambda2_2e
-
-SCH1_2e <- (t(lambda1_2e) %*% b0)^2 / (t(lambda1_2e) %*% G %*% lambda1_2e); SCH1_2e
-SCH2_2e <- (t(lambda2_2e) %*% b0)^2 / (t(lambda2_2e) %*% G %*% lambda2_2e); SCH2_2e
-
-Lambda_2e <- rbind(t(lambda1_2e), t(lambda2_2e)); Lambda_2e
-SCH0_2e <- t(Lambda_2e %*% b0) %*% solve(Lambda_2e %*% G %*% t(Lambda_2e)) %*%
-  (Lambda_2e %*% b0); SCH0_2e
-
-Fcal_2e <- SCH0_2e / (2 * s2); Fcal_2e
-Fcrit_2e <- qf(0.95, 2, n - qr(X)$rank); Fcrit_2e
-```
-
----
-
 ## Ejercicio 3
 
-**3.** Una encuesta de opinión arroja los puntajes de cuatro obreros: 37, 25, 42 y 28 para cierta característica; los de dos artesanos son 23 y 29; los de tres profesionales son 38, 30 y 25; y los de dos trabajadores independientes son 23 y 29. Si en la población de la cual provienen estas personas, los porcentajes correspondientes a estos cuatro grupos son respectivamente 10 %, 20 %, 40 % y 30 %, ¿cuáles son las estimaciones y varianzas estimadas de: <!--[cite: 5, 6] -->
+**3.** Una encuesta de opinión arroja los puntajes de cuatro obreros: 37, 25, 42 y 28 para cierta característica; los de dos artesanos son 23 y 29; los de tres profesionales son 38, 30 y 25; y los de dos trabajadores independientes son 23 y 29. Si en la población de la cual provienen estas personas, los porcentajes correspondientes a estos cuatro grupos son respectivamente 10 %, 20 %, 40 % y 30 %, ¿cuáles son las estimaciones y varianzas estimadas de:
 
-$$\begin{bmatrix} 37 \\ 25 \\ 42 \\ 28 \\ 23 \\ 29 \\ 38 \\ 30 \\ 25 \\ 23 \\ 29 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 1 & 0 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 & 0 \\ 1 & 0 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 & 0 \\ 1 & 0 & 0 & 0 & 1 \\ 1 & 0 & 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} \mu \\ \alpha_1 \\ \alpha_2 \\ \alpha_3 \\ \alpha_4 \end{bmatrix} + \begin{bmatrix} \varepsilon_{11} \\ \varepsilon_{12} \\ \varepsilon_{13} \\ \varepsilon_{14} \\ \varepsilon_{21} \\ \varepsilon_{22} \\ \varepsilon_{31} \\ \varepsilon_{32} \\ \varepsilon_{33} \\ \varepsilon_{41} \\ \varepsilon_{42} \end{bmatrix} \quad \begin{aligned} P_1 &= 0.10 \quad \text{OBREROS} \\ P_2 &= 0.20 \quad \text{ARTESANOS} \\ P_3 &= 0.40 \quad \text{PROFESIONALES} \\ P_4 &= 0.30 \quad \text{INDEPENDIENTES} \end{aligned}$$
-
-$$\hat{\beta} = \begin{bmatrix} 0 \\ 33 \\ 26 \\ 31 \\ 26 \end{bmatrix} \quad (X^TX)^- = \begin{bmatrix} 0 & 0 & 0 & 0 & 0 \\ 0 & 1/4 & 0 & 0 & 0 \\ 0 & 0 & 1/2 & 0 & 0 \\ 0 & 0 & 0 & 1/3 & 0 \\ 0 & 0 & 0 & 0 & 1/2 \end{bmatrix} \quad \hat{\sigma}^2 = 44$$
+$$\begin{bmatrix} 37 \\ 25 \\ 42 \\ 28 \\ 23 \\ 29 \\ 38 \\ 30 \\ 25 \\ 23 \\ 29 \end{bmatrix} = \begin{bmatrix} 1 & 1 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 1 & 1 & 0 & 0 & 0 \\ 1 & 0 & 1 & 0 & 0 \\ 1 & 0 & 1 & 0 & 0 \\ 1 & 0 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 & 0 \\ 1 & 0 & 0 & 1 & 0 \\ 1 & 0 & 0 & 0 & 1 \\ 1 & 0 & 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} \mu \\ \alpha_1 \\ \alpha_2 \\ \alpha_3 \\ \alpha_4 \end{bmatrix} + \begin{bmatrix} e_{11} \\ e_{12} \\ e_{13} \\ e_{14} \\ e_{21} \\ e_{22} \\ e_{31} \\ e_{32} \\ e_{33} \\ e_{41} \\ e_{42} \end{bmatrix} \qquad \begin{aligned} P_1 &= 0.10 \quad \text{OBREROS} \\ P_2 &= 0.20 \quad \text{ARTESANOS} \\ P_3 &= 0.40 \quad \text{PROFESIONALES} \\ P_4 &= 0.30 \quad \text{INDEPENDIENTES} \end{aligned}$$
 
 ```{r}
-#[cite: 9]
-# 3.
-puntaje <- c(37, 25, 42, 28,
-             23, 29,
-             38, 30, 25,
-             23, 29)
-trabajadores <- c(rep("Obrero", 4), rep("Artesanos", 2),
-               rep("Profesionales", 3), rep("Independientes", 2))
+puntaje <- c(37, 25, 42, 28, 23, 29, 38, 30, 25, 23, 29)
+trabajadores <- factor(rep(c("Obrero", "Artesanos",
+                             "Profesionales", "Independientes"),
+                           c(4, 2, 3, 2)),
+                       levels = c("Obrero", "Artesanos",
+                                "Profesionales", "Independientes"))
 
-datos <- data.frame(puntaje, trabajadores)
-datos$trabajadores <- factor(datos$trabajadores,
-                             levels = c("Obrero", "Artesanos",
-                                        "Profesionales", "Independientes"))
-datos
-
-# Matriz de diseño
-modelo <- lm(puntaje ~ trabajadores - 1, data = datos)
-X3 <- model.matrix(modelo)
-X3 <- cbind(Intercepto = rep(1, length(puntaje)), X3)
+X3 <- cbind(1, model.matrix(puntaje ~ trabajadores - 1))
 colnames(X3) <- NULL
-X3
+y3 <- as.matrix(puntaje)
 
-y3 <- as.matrix(puntaje); y3
-
-A <- t(X3) %*% X3; A
-
-G3 <- invg(A); fractions(G3)
-
-b0_3 <- G3 %*% t(X3) %*% y3; b0_3
-
-# ANOVA
-n3 <- length(y3); n3
-
-SCReg_3 <- t(y3) %*% X3 %*% G3 %*% t(X3) %*% y3; SCReg_3
-
-SCTotal_3 <- t(y3) %*% y3; SCTotal_3
-
-SCMedia_3 <- n3*mean(y3)^2; SCMedia_3
-
-SCResid_3 <- SCTotal_3 - SCReg_3; SCResid_3
-
-SCReg_m3 <- SCReg_3 - SCMedia_3; SCReg_m3
-
-s2_3 <- SCResid_3/(n3 - qr(X3)$rank); s2_3
-
-CMReg_m3 <- SCReg_m3/(qr(X3)$rank - 1); CMReg_m3
+X3; y3
 ```
 
-### a) el puntaje poblacional? <!--[cite: 6] -->
+```{r}
+A3 <- t(X3) %*% X3
+G3 <- invg(A3)
+b0_3 <- G3 %*% t(X3) %*% y3
 
-- Estimación:
+n3 <- length(y3); r3 <- qr(X3)$rank
+SCReg_3 <- as.numeric(t(y3) %*% X3 %*% b0_3)
+SCTotal_3 <- as.numeric(t(y3) %*% y3)
+SCResid_3 <- SCTotal_3 - SCReg_3
+s2_3 <- SCResid_3 / (n3 - r3)
+H3 <- G3 %*% A3
+
+A3; fractions(G3); b0_3
+n3; r3; SCReg_3; SCTotal_3; SCResid_3; s2_3
+H3
+```
+
+$$\hat{\beta} = \begin{bmatrix} 0 \\ 33 \\ 26 \\ 31 \\ 26 \end{bmatrix} \qquad (X^TX)^- = \begin{bmatrix} 0 & 0 & 0 & 0 & 0 \\ 0 & 1/4 & 0 & 0 & 0 \\ 0 & 0 & 1/2 & 0 & 0 \\ 0 & 0 & 0 & 1/3 & 0 \\ 0 & 0 & 0 & 0 & 1/2 \end{bmatrix} \qquad \hat{\sigma}^2 = 44$$
+
+**a) el puntaje poblacional?**
+
+```{r}
+lambda3_a <- c(1, 0.10, 0.20, 0.40, 0.30)
+est3_a <- as.numeric(t(lambda3_a) %*% b0_3)
+var3_a <- as.numeric(s2_3 * (t(lambda3_a) %*% G3 %*% lambda3_a))
+
+est3_a; var3_a
+```
+
+- Estimación y varianza estimada:
 
 $$\lambda^T \hat{\beta} = \begin{bmatrix} 1 & 0.1 & 0.2 & 0.4 & 0.3 \end{bmatrix} \begin{bmatrix} 0 \\ 33 \\ 26 \\ 31 \\ 26 \end{bmatrix} = 28.7$$
 
-- Varianza estimada:
-
 $$Var[\lambda^T \hat{\beta}] = \hat{\sigma}^2 \lambda^T (X^TX)^- \lambda = 5.316667$$
 
+**b) la diferencia en el puntaje entre los profesionales y el promedio de los otros tres grupos?**
+
+$$\alpha_3 - \frac{\alpha_1 + \alpha_2 + \alpha_4}{3} = -\frac{\alpha_1}{3} - \frac{\alpha_2}{3} + \alpha_3 - \frac{\alpha_4}{3} \implies \lambda^T = \begin{bmatrix} 0 & -1/3 & -1/3 & 1 & -1/3 \end{bmatrix}$$
+
 ```{r}
-#[cite: 9]
-# 3.a.
-lambda3_0 <- matrix(c(1, 0.10, 0.20, 0.40, 0.30), nrow = 5); lambda3_0
+lambda3_b <- c(0, -1/3, -1/3, 1, -1/3)
+all.equal(as.vector(t(lambda3_b) %*% H3), lambda3_b)
 
-mediaestimada3 <- t(lambda3_0) %*% b0_3; mediaestimada3
+est3_b <- as.numeric(t(lambda3_b) %*% b0_3)
+var3_b <- as.numeric(s2_3 * (t(lambda3_b) %*% G3 %*% lambda3_b))
 
-varestimada3 <- s2_3 %*% t(lambda3_0) %*% G3 %*% lambda3_0; varestimada3
+est3_b; var3_b
 ```
 
-### b) la diferencia en el puntaje entre los profesionales y el promedio de los otros tres grupos? <!--[cite: 6] -->
+- $\lambda^T H = \lambda^T$ cumple la condición; por lo tanto, $\lambda^T \beta$ es estimable.
 
-$$\alpha_3 = \frac{(\alpha_1 + \alpha_2 + \alpha_4)}{3} \rightarrow -\alpha_1 - \alpha_2 + 3\alpha_3 - \alpha_4 = 0$$
-$$-\frac{\alpha_1}{3} - \frac{\alpha_2}{3} + \alpha_3 - \frac{\alpha_4}{3} = 0$$
-
-$$\lambda^T = \begin{bmatrix} 0 & -1/3 & -1/3 & 1 & -1/3 \end{bmatrix}$$
-
-- $\lambda^T H = \lambda^T$ cumple la condición, por lo tanto, $\lambda^T$ es estimable.
-
-$$E[\lambda^T \hat{\beta}] = \lambda^T \hat{\beta} = \begin{bmatrix} 0 & -1/3 & -1/3 & 1 & -1/3 \end{bmatrix} \begin{bmatrix} 0 \\ 33 \\ 26 \\ 31 \\ 26 \end{bmatrix} = 2.66667$$
+$$\lambda^T \hat{\beta} = \begin{bmatrix} 0 & -1/3 & -1/3 & 1 & -1/3 \end{bmatrix} \begin{bmatrix} 0 \\ 33 \\ 26 \\ 31 \\ 26 \end{bmatrix} = 2.66667$$
 
 $$Var[\lambda^T \hat{\beta}] = \hat{\sigma}^2 \lambda^T (X^TX)^- \lambda = 20.77778$$
 
-```{r}
-#[cite: 9]
-# 3.b. La diferencia en el puntaje entre los profesionales y el promedio
-# de los otros tres grupos
-lambda3_b <- matrix(c(0, -1/3, -1/3, 1, -1/3), nrow = 5); lambda3_b
-
-# Ver si es estimable
-H3 <- G3 %*% t(X3) %*% X3; H3
-
-all.equal(t(lambda3_b) %*% H3, t(lambda3_b))
-
-## Estimación Puntual
-estpuntual3_b <- t(lambda3_b) %*% b0_3; estpuntual3_b
-
-var3_b <- s2_3 %*% t(lambda3_b) %*% G3 %*% lambda3_b; var3_b
-```
-
-### c) la diferencia entre un trabajador independiente y un profesional? <!--[cite: 6] -->
+**c) la diferencia entre un trabajador independiente y un profesional?**
 
 $$\alpha_4 - \alpha_3 = \lambda^T \beta = \begin{bmatrix} 0 & 0 & 0 & -1 & 1 \end{bmatrix} \beta$$
 
-- $\lambda^T H = \lambda^T$ cumple condición, por lo tanto, $\lambda^T$ es estimable.
+```{r}
+lambda3_c <- c(0, 0, 0, -1, 1)
+all.equal(as.vector(t(lambda3_c) %*% H3), lambda3_c)
 
-$$E[\lambda^T \hat{\beta}] = \lambda^T \hat{\beta} = \begin{bmatrix} 0 & 0 & 0 & -1 & 1 \end{bmatrix} \begin{bmatrix} 0 \\ 33 \\ 26 \\ 31 \\ 26 \end{bmatrix} = -5$$
+est3_c <- as.numeric(t(lambda3_c) %*% b0_3)
+var3_c <- as.numeric(s2_3 * (t(lambda3_c) %*% G3 %*% lambda3_c))
+
+est3_c; var3_c
+```
+
+- $\lambda^T H = \lambda^T$ cumple la condición; por lo tanto, $\lambda^T \beta$ es estimable.
+
+$$\lambda^T \hat{\beta} = \begin{bmatrix} 0 & 0 & 0 & -1 & 1 \end{bmatrix} \begin{bmatrix} 0 \\ 33 \\ 26 \\ 31 \\ 26 \end{bmatrix} = -5$$
 
 $$Var[\lambda^T \hat{\beta}] = \hat{\sigma}^2 \lambda^T (X^TX)^- \lambda = 36.66667$$
 
-```{r}
-#[cite: 9]
-# 3.c. La diferencia entre un trabajador independiente y un profesional
-lambda3_c <- matrix(c(0, 0, 0, -1, 1), nrow = 5); lambda3_c
-
-# Ver si es estimable
-all.equal(t(lambda3_c) %*% H3, t(lambda3_c))
-
-## Estimación Puntual
-estpuntual3_c <- t(lambda3_c) %*% b0_3; estpuntual3_c
-
-var3_c <- s2_3 %*% t(lambda3_c) %*% G3 %*% lambda3_c; var3_c
-```
-
----
-
 ## Ejercicio 4
 
-**4. (Ejercicio 3, continuación)** Contrasta la hipótesis de que el puntaje de un obrero es igual al de un artesano, igual al promedio aritmético de los puntajes de un profesional y un trabajador independiente, y que todos estos son iguales al promedio ponderado poblacional de los puntajes de un obrero y un profesional. <!--[cite: 7] -->
+**4. (Ejercicio 3, continuación)** Contrasta la hipótesis de que el puntaje de un obrero es igual al de un artesano, igual al promedio aritmético de los puntajes de un profesional y un trabajador independiente, y que todos estos son iguales al promedio ponderado poblacional de los puntajes de un obrero y un profesional.
 
-$$\mu_1 = \mu_2 \rightarrow \mu_1 - \mu_2 = 0$$
-$$\mu_1 = \frac{\mu_3 + \mu_4}{2} \rightarrow 2\mu_1 - \mu_3 - \mu_4 = 0$$
-$$\mu_1 = \frac{(0.1\mu_1 + 0.4\mu_3)}{0.5} \rightarrow 0.5\mu_1 = 0.1\mu_1 + 0.4\mu_3 \rightarrow 0.4\mu_1 - 0.4\mu_3 = 0 \rightarrow \mu_1 - \mu_3 = 0$$
+$$\begin{aligned} \mu_1 = \mu_2 &\implies \alpha_1 - \alpha_2 = 0 \\ \mu_1 = \frac{\mu_3 + \mu_4}{2} &\implies 2\alpha_1 - \alpha_3 - \alpha_4 = 0 \\ \mu_1 = \frac{0.1\mu_1 + 0.4\mu_3}{0.5} &\implies 0.4\mu_1 - 0.4\mu_3 = 0 \implies \alpha_1 - \alpha_3 = 0 \end{aligned}$$
 
 $$\Lambda = \begin{bmatrix} 0 & 1 & -1 & 0 & 0 \\ 0 & 2 & 0 & -1 & -1 \\ 0 & 1 & 0 & -1 & 0 \end{bmatrix}$$
 
-- $\Lambda H = \Lambda$
-- $r(\Lambda) = 3$
+```{r}
+Lambda4 <- matrix(c(0, 1, -1,  0,  0,
+                    0, 2,  0, -1, -1,
+                    0, 1,  0, -1,  0), nrow = 3, byrow = TRUE)
+all.equal(Lambda4 %*% H3, Lambda4)
 
-Cumple ambas condiciones, por lo tanto, $\Lambda$ es estimable.
+SCH04 <- as.numeric(t(Lambda4 %*% b0_3) %*%
+                      solve(Lambda4 %*% G3 %*% t(Lambda4)) %*%
+                      (Lambda4 %*% b0_3))
+Fcal4 <- SCH04 / (3 * s2_3)
+Fcrit4 <- qf(0.95, 3, n3 - r3)
+
+SCH04; Fcal4; Fcrit4
+```
+
+- $\Lambda H = \Lambda$ y $r(\Lambda) = 3$. Cumple ambas condiciones; por lo tanto, $\Lambda$ es estimable.
 
 $$SCH_0 = (\Lambda \hat{b} - d)^T (\Lambda (X^TX)^- \Lambda^T)^{-1} (\Lambda \hat{b} - d) = 102.9091$$
 
-$$F_{cal} = \frac{SCH_0}{3\hat{\sigma}^2} = \frac{102.9091}{3(44)} = 0.7796143 \quad ; \quad F_{0.95, 3, 7} = 4.346831$$
+$$F_{cal} = \frac{SCH_0}{3\hat{\sigma}^2} = \frac{102.9091}{3(44)} = 0.7796143 \qquad F_{0.95, 3, 7} = 4.346831$$
 
 A un $\alpha = 0.05$, no se rechaza $H_0$.
 
-```{r}
-#[cite: 9]
-# 4.
-Lambda4 <- matrix(c(0, 1, -1, 0, 0,
-                    0, 2, 0, -1, -1,
-                    0, 1, 0, -1, 0), nrow = 3, byrow = TRUE); Lambda4
-
-SCH04 <- t(Lambda4 %*% b0_3) %*% solve(Lambda4 %*% G3 %*% t(Lambda4)) %*%
-  (Lambda4 %*% b0_3); SCH04
-
-Fcal4 <- SCH04/(3 * s2_3); Fcal4
-Fcrit4 <- qf(0.95, 3, n3 - qr(X3)$rank); Fcrit4
-```
-
----
-
 ## Ejercicio 5
 
-**5. (Ejercicio 3, continuación)** Encuentra dos contrastes mutuamente ortogonales (que no involucren a los trabajadores independientes) que sean ortogonales a la diferencia entre el puntaje de un obrero y el de un artesano, y contrasta la hipótesis conjunta de que los tres contrastes son iguales a cero. <!--[cite: 7, 8] -->
+**5. (Ejercicio 3, continuación)** Encuentra dos contrastes mutuamente ortogonales (que no involucren a los trabajadores independientes) que sean ortogonales a la diferencia entre el puntaje de un obrero y el de un artesano, y contrasta la hipótesis conjunta de que los tres contrastes son iguales a cero.
 
-$$\lambda_1^T = \begin{bmatrix} 0 & 1 & -1 & 0 & 0 \end{bmatrix}$$
-$$\lambda_2^T = \begin{bmatrix} 0 & a & b & c & 0 \end{bmatrix} = \begin{bmatrix} 0 & 2 & 1 & -3 & 0 \end{bmatrix}$$
+$$\begin{aligned} \lambda_1^T &= \begin{bmatrix} 0 & 1 & -1 & 0 & 0 \end{bmatrix} \\ \lambda_2^T &= \begin{bmatrix} 0 & a & b & c & 0 \end{bmatrix} = \begin{bmatrix} 0 & 2 & 1 & -3 & 0 \end{bmatrix} \end{aligned}$$
 
-- $a + b + c = 0 \rightarrow c = -a - b$
-- $\lambda_1^T G \lambda_2 = 0 \rightarrow \begin{bmatrix} 0 & 1 & -1 & 0 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 & 0 \\ 0 & 1/4 & 0 & 0 & 0 \\ 0 & 0 & 1/2 & 0 & 0 \\ 0 & 0 & 0 & 1/3 & 0 \\ 0 & 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ a \\ b \\ c \\ 0 \end{bmatrix} = \frac{a}{4} - \frac{b}{2} = 0 \rightarrow a = 2b$
-  - $b = 1$
-  - $a = 2$
-  - $c = -3$
+- $a + b + c = 0 \implies c = -a - b$
+- Ortogonalidad $\lambda_1^T G \lambda_2 = 0$:
+
+$$\begin{bmatrix} 0 & 1 & -1 & 0 & 0 \end{bmatrix} \begin{bmatrix} 0 & 0 & 0 & 0 & 0 \\ 0 & 1/4 & 0 & 0 & 0 \\ 0 & 0 & 1/2 & 0 & 0 \\ 0 & 0 & 0 & 1/3 & 0 \\ 0 & 0 & 0 & 0 & 1/2 \end{bmatrix} \begin{bmatrix} 0 \\ a \\ b \\ c \\ 0 \end{bmatrix} = \frac{a}{4} - \frac{b}{2} = 0 \implies a = 2b$$
+
+Tomando $b = 1$, se obtiene $a = 2$ y $c = -3$. Para el tercer contraste:
 
 $$\lambda_3^T = \begin{bmatrix} 0 & d & e & f & g \end{bmatrix} = \begin{bmatrix} 0 & 4 & 2 & 3 & -9 \end{bmatrix}$$
 
-- $d + e + f + g = 0 \rightarrow g = -d - e - f = -2e - e - \frac{3}{2}e = -\frac{9e}{2}$
-- $\lambda_1^T G \lambda_3 = 0 \rightarrow \frac{d}{4} - \frac{e}{2} = 0 \rightarrow d = 2e$
-- $\lambda_2^T G \lambda_3 = 0 \rightarrow \frac{2d}{4} + \frac{e}{2} - \frac{3f}{3} = 0 \rightarrow \frac{d}{2} + \frac{e}{2} - f = 0 \rightarrow \frac{2e}{2} + \frac{e}{2} - f = 0 \rightarrow f = \frac{3}{2}e$
+- $d + e + f + g = 0 \implies g = -d - e - f = -2e - e - \frac{3}{2}e = -\frac{9e}{2}$
+- $\lambda_1^T G \lambda_3 = 0 \implies \frac{d}{4} - \frac{e}{2} = 0 \implies d = 2e$
+- $\lambda_2^T G \lambda_3 = 0 \implies \frac{2d}{4} + \frac{e}{2} - \frac{3f}{3} = 0 \implies \frac{d}{2} + \frac{e}{2} - f = 0 \implies f = \frac{3}{2}e$
 
-$$H_0: \begin{cases} \alpha_1 - \alpha_2 = 0 \\ 2\alpha_1 + \alpha_2 - 3\alpha_3 = 0 \\ 4\alpha_1 + 2\alpha_2 + 3\alpha_3 - 9\alpha_4 = 0 \end{cases} \quad \Lambda = \begin{bmatrix} 0 & 1 & -1 & 0 & 0 \\ 0 & 2 & 1 & -3 & 0 \\ 0 & 4 & 2 & 3 & -9 \end{bmatrix}$$
+$$H_0: \begin{cases} \alpha_1 - \alpha_2 = 0 \\ 2\alpha_1 + \alpha_2 - 3\alpha_3 = 0 \\ 4\alpha_1 + 2\alpha_2 + 3\alpha_3 - 9\alpha_4 = 0 \end{cases} \qquad \Lambda = \begin{bmatrix} 0 & 1 & -1 & 0 & 0 \\ 0 & 2 & 1 & -3 & 0 \\ 0 & 4 & 2 & 3 & -9 \end{bmatrix}$$
 
-- $\Lambda H = \Lambda$
-- $r(\Lambda) = 3$
+```{r}
+Lambda5 <- matrix(c(0, 1, -1,  0,  0,
+                    0, 2,  1, -3,  0,
+                    0, 4,  2,  3, -9), nrow = 3, byrow = TRUE)
+all.equal(Lambda5 %*% H3, Lambda5)
 
-Cumple ambas condiciones, por lo tanto, $\Lambda$ es estimable.
+SCH_i <- as.numeric((Lambda5 %*% b0_3)^2 / diag(Lambda5 %*% G3 %*% t(Lambda5)))
+SCH0_5 <- sum(SCH_i)
+Fcal5 <- SCH0_5 / (3 * s2_3)
+Fcrit5 <- qf(0.95, 3, n3 - r3)
 
-$$SCH_1 = \frac{(\lambda_1^T \hat{b})^2}{\lambda_1^T G \lambda_1} = 65.33333$$
-$$SCH_2 = \frac{(\lambda_2^T \hat{b})^2}{\lambda_2^T G \lambda_2} = 0.2222$$
-$$SCH_3 = \frac{(\lambda_3^T \hat{b})^2}{\lambda_3^T G \lambda_3} = 37.3535$$
+SCH_i; SCH0_5; Fcal5; Fcrit5
+```
+
+- $\Lambda H = \Lambda$ y $r(\Lambda) = 3$. Cumple ambas condiciones; por lo tanto, $\Lambda$ es estimable.
+
+$$\begin{aligned} SCH_1 &= \frac{(\lambda_1^T \hat{b})^2}{\lambda_1^T G \lambda_1} = 65.33333 \\ SCH_2 &= \frac{(\lambda_2^T \hat{b})^2}{\lambda_2^T G \lambda_2} = 0.22222 \\ SCH_3 &= \frac{(\lambda_3^T \hat{b})^2}{\lambda_3^T G \lambda_3} = 37.35354 \end{aligned}$$
 
 Por ortogonalidad, se cumple que $SCH_0 = SCH_1 + SCH_2 + SCH_3$:
 
 $$SCH_0 = \frac{196}{3} + \frac{2}{9} + \frac{3698}{99} = \frac{10188}{99} \approx 102.9091$$
 
-$$F_{cal} = \frac{102.9091}{(3)44} \approx 0.7796 \quad ; \quad F_{0.95, 3, 7} = 4.346831$$
+$$F_{cal} = \frac{102.9091}{3(44)} \approx 0.7796 \qquad F_{0.95, 3, 7} = 4.346831$$
 
 - A un $\alpha = 0.05$, no se rechaza $H_0$.
-
-```{r}
-#[cite: 7, 8, 9]
-# 5.
-l1_5 <- matrix(c(0, 1, -1, 0, 0), nrow = 5)
-l2_5 <- matrix(c(0, 2, 1, -3, 0), nrow = 5)
-l3_5 <- matrix(c(0, 4, 2, 3, -9), nrow = 5)
-
-# Verificación de ortogonalidad mutua
-t(l1_5) %*% G3 %*% l2_5
-t(l1_5) %*% G3 %*% l3_5
-t(l2_5) %*% G3 %*% l3_5
-
-SCH1_5 <- (t(l1_5) %*% b0_3)^2 / (t(l1_5) %*% G3 %*% l1_5); SCH1_5
-SCH2_5 <- (t(l2_5) %*% b0_3)^2 / (t(l2_5) %*% G3 %*% l2_5); SCH2_5
-SCH3_5 <- (t(l3_5) %*% b0_3)^2 / (t(l3_5) %*% G3 %*% l3_5); SCH3_5
-
-SCH0_5 <- SCH1_5 + SCH2_5 + SCH3_5; SCH0_5
-fractions(SCH0_5)
-
-Fcal5 <- SCH0_5 / (3 * s2_3); Fcal5
-Fcrit5 <- qf(0.95, 3, n3 - qr(X3)$rank); Fcrit5
-```
 
 <!-- ═══════════════════════════ REFERENCIAS ═══════════════════════════════ -->
 
@@ -791,4 +598,4 @@ Fcrit5 <- qf(0.95, 3, n3 - qr(X3)$rank); Fcrit5
 
 # Anexos
 
-El presente informe es la versión tipeada de los ejercicios resueltos a mano por los integrantes presente en [`draft`](https://github.com/jonnathan2023/LinearModels_GM_Infe_applications/tree/main/draft), dicha carpeta contiene la resolución a mano alzada y los comandos auxiliares de R.
+El presente informe es la versión tipeada de los ejercicios resueltos a mano por los integrantes presente en [`draft`](https://github.com/jonnathan2023/LinearModels_GM_Infe_applications/tree/9ef877916e49197b20f835154294070bb397b212/Informe), dicha carpeta contiene la resolución a mano alzada y los comandos auxiliares en un script de R.
