@@ -6,7 +6,7 @@
 
 Repositorio del trabajo encomendado para el curso de **Modelos Lineales I** (Departamento de Estadística e Informática, Universidad Nacional Agraria La Molina - UNALM).
 
-El repositorio aborda la teoría y aplicación de modelos lineales de Gauss-Markov con matrices de diseño de rango deficiente, enfocándose en la estimabilidad de parámetros, distribuciones de formas cuadráticas, intervalos de confianza y pruebas de hipótesis lineales generales.
+El trabajo aborda la aplicación de modelos lineales de Gauss-Markov con matrices de diseño de rango deficiente, enfocándose en la estimabilidad de parámetros, distribuciones de formas cuadráticas, intervalos de confianza y pruebas de hipótesis lineales generales.
 
 ---
 

@@ -1,1 +1,190 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Modelos Lineales de Gauss-Markov · Grupo 5</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--tx:#f0f6fc;--mu:#8b949e;--acc:#d97706;--acc2:#c2410c;--card:rgba(22,27,34,.82);--bd:rgba(217,119,6,.22);--ok:#3fb950;--bad:#f0883e;--code:#0b0f14;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#faf6ef;--bg2:#f1e9dc;--tx:#2a2118;--mu:#6b5d4d;--card:rgba(255,252,246,.9);--code:#fffaf0;--bd:rgba(194,65,12,.25)}}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:20px;height:auto}
+body{margin:0;background:linear-gradient(160deg,var(--bg),var(--bg2));color:var(--tx);font:16px/1.7 Inter,system-ui,sans-serif;min-height:100%}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#toggle{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;z-index:30;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px 12px;cursor:pointer;font:inherit;backdrop-filter:blur(8px)}
+nav{position:fixed;top:0;left:0;bottom:0;width:270px;z-index:20;background:var(--card);backdrop-filter:blur(14px);border-right:1px solid var(--bd);padding:64px 16px 24px;overflow-y:auto;transition:transform .3s;padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
+nav.hide{transform:translateX(-100%)}
+nav a{display:block;color:var(--mu);text-decoration:none;font-size:14px;padding:4px 10px;border-left:2px solid transparent;border-radius:0 6px 6px 0}
+nav a.h{margin-top:12px;font-weight:600;color:var(--tx)}nav a.s{margin-left:12px}
+nav a:hover{color:var(--tx)}nav a.on{color:var(--acc);border-color:var(--acc);background:rgba(217,119,6,.08)}
+main{position:relative;z-index:1;margin-left:270px;padding:0 24px 80px;transition:margin .3s}
+main.full{margin-left:0}
+.w{max-width:860px;margin:0 auto}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 0 40px}
+.logo{width:130px;height:130px;filter:drop-shadow(0 0 22px rgba(217,119,6,.55));margin-bottom:18px}
+img.logo{width:auto;height:140px;max-width:70%;object-fit:contain;background:none;border:0}
+.inst{letter-spacing:.14em;font-size:13px;color:var(--mu);text-transform:uppercase;margin:2px 0}.inst b{color:var(--tx);font-weight:600}
+h1{font-size:clamp(28px,5vw,46px);line-height:1.15;margin:26px 0 8px;background:linear-gradient(90deg,#f0f6fc,#e8a455 60%,#d97706);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mu);max-width:640px}.meta{margin:14px 0;color:var(--tx)}.meta span{color:var(--acc)}
+.team{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;width:100%;max-width:620px;margin:18px auto 0}
+.mem{flex:0 1 190px;text-align:center;background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;transition:transform .2s,border-color .2s}.mem:hover{transform:translateY(-3px);border-color:var(--acc)}
+.mem small{color:var(--acc);font-family:'Fira Code',monospace}
+h2{font-size:30px;margin:70px 0 6px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+h3{font-size:19px;margin:42px 0 10px;color:#e8a455}
+.stmt{background:var(--card);border:1px solid var(--bd);border-left:4px solid var(--acc);border-radius:12px;padding:14px 18px;margin:12px 0;backdrop-filter:blur(6px)}
+.stmt b.k{color:var(--acc);font-size:12px;letter-spacing:.1em;text-transform:uppercase;display:block}
+table.d{border-collapse:collapse;margin:10px 0;font-size:14px;display:block;overflow-x:auto;max-width:100%}
+table.d td,table.d th{border:1px solid var(--bd);padding:6px 12px}table.d th{background:rgba(217,119,6,.14)}
+.tabs{display:flex;gap:6px;margin:14px 0 0}
+.tabs button{background:transparent;color:var(--mu);border:1px solid var(--bd);border-bottom:0;border-radius:10px 10px 0 0;padding:7px 14px;cursor:pointer;font:inherit;font-size:14px}
+.tabs button.on{background:var(--card);color:var(--acc);font-weight:600}
+.pane{display:none;background:var(--card);border:1px solid var(--bd);border-radius:0 12px 12px 12px;padding:14px 18px;overflow-x:auto;max-width:100%}.pane.on{display:block}
+mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden}
+.code{border:1px solid var(--bd);border-radius:10px;background:var(--code);overflow:hidden;margin:6px 0}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font:12px 'Fira Code',monospace;color:var(--mu);border-bottom:1px solid var(--bd)}
+.ch button{background:none;border:1px solid var(--bd);color:var(--tx);border-radius:6px;padding:2px 9px;cursor:pointer;font:inherit;margin-left:6px}.ch button:hover{border-color:var(--acc);color:var(--acc)}
+pre{margin:0;padding:12px 14px;overflow-x:auto;font:13px/1.55 'Fira Code',monospace;color:var(--tx)}
+.code.fold pre{display:none}
+.c{color:#6e7a8a;font-style:italic}.s{color:#e8a455}.n{color:#79c0ff}.f{color:#d2a8ff}.kw{color:#ff7b72}
+.verd{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0;padding:12px 16px;border-radius:12px;border:1px solid var(--bd);background:var(--card)}
+.pill{padding:4px 14px;border-radius:99px;font-weight:700;font-size:13px}
+.pill.ok{background:rgba(63,185,80,.16);color:var(--ok);border:1px solid var(--ok)}.pill.no{background:rgba(240,136,62,.16);color:var(--bad);border:1px solid var(--bad)}
+.fc{margin:10px 0}.fc svg{width:100%;height:auto;max-width:520px;display:block}
+.ref{padding-left:2em;text-indent:-2em}
+@media(max-width:900px){nav{transform:translateX(-100%)}nav.show{transform:none}main{margin-left:0;padding:0 14px 60px}}
+</style></head><body>
+<canvas id="bg"></canvas>
+<button id="toggle" aria-label="Índice">☰ Índice</button>
+<nav id="toc"></nav>
+<main id="main"><div class="w">
+<header class="hero" id="top">
+<img class="logo" src="logo.png" alt="Escudo UNALM" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg class="logo" style="display:none" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#d97706" stroke-width="3"/><circle cx="50" cy="50" r="38" fill="#161b22" stroke="#c2410c" stroke-width="1.5"/><path d="M14 66 C30 66 34 22 50 22 S70 66 86 66" fill="none" stroke="#e8a455" stroke-width="3"/><text x="50" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#f0f6fc" font-family="Inter">UNALM</text></svg>
+<p class="inst"><b>Universidad Nacional Agraria La Molina</b></p>
+<p class="inst">Facultad de Economía y Planificación</p><p class="inst">Departamento de Estadística e Informática</p>
+<h1>Trabajo encomendado grupal</h1>
+<p class="sub">Ejercicios de distribuciones de formas cuadráticas, pruebas de hipótesis e intervalos de confianza</p>
+<p class="meta"><span>Curso:</span> Modelos Lineales I · 2026<br><span>Docente:</span> Mg. Samuel Huamaní Flores</p>
+<p class="inst"><b>Grupo 5</b></p>
+<div class="team"><div class="mem">Nombre del integrante<br><small>código</small></div><div class="mem">Nombre del integrante<br><small>código</small></div><div class="mem">Nombre del integrante<br><small>código</small></div><div class="mem">Nombre del integrante<br><small>código</small></div><div class="mem">Nombre del integrante<br><small>código</small></div></div>
+<p class="inst" style="margin-top:28px">La Molina · Lima · Perú · 2026</p>
+</header>
+<div id="content"></div>
+<h2 id="refs">Referencias bibliográficas</h2>
+<p class="ref">Huamaní Flores, S. (2026). <i>Apuntes de clase del curso: Modelos lineales I</i>. Universidad Nacional Agraria La Molina, Departamento Académico de Estadística e Informática.</p>
+</div></main>
+<script>
+const R=String.raw;
+const SH=R`G<-NULL`;
+const CODE0=R`consumo <- c(74,68,77,76,80,85,93)
+educacion <- factor(c(1,1,1,2,2,3,3))
+X <- cbind(1, model.matrix(consumo ~ educacion - 1))
+y <- as.matrix(consumo)
+A <- t(X) %*% X; G <- invg(A)   # inversa generalizada
+b0 <- G %*% t(X) %*% y          # (0, 73, 78, 89)
+n <- 7; r <- qr(X)$rank
+s2 <- (t(y)%*%y - t(y)%*%X%*%b0)/(n-r)  # 20.5`;
+const MAT=R`$$\begin{bmatrix}74\\68\\77\\76\\80\\85\\93\end{bmatrix}=\begin{bmatrix}1&1&0&0\\1&1&0&0\\1&1&0&0\\1&0&1&0\\1&0&1&0\\1&0&0&1\\1&0&0&1\end{bmatrix}\begin{bmatrix}\mu\\\alpha_1\\\alpha_2\\\alpha_3\end{bmatrix}+e,\quad E(e)=0,\ Var(e)=\sigma^2 I_7$$`;
+const GM=R`G=\begin{bmatrix}0&0&0&0\\0&1/3&0&0\\0&0&1/2&0\\0&0&0&1/2\end{bmatrix}`;
+const D=[
+{id:"e1",t:"Ejercicio 1",s:R`Datos de consumo (índice nutricional) de 7 personas según nivel de educación: <b>1</b> (secundaria incompleta): 74, 68, 77 · <b>2</b> (graduado de secundaria): 76, 80 · <b>3</b> (universitario): 85, 93. Total = 553.<table class="d"><tr><th>Nivel</th><th>n</th><th>Índices</th><th>Total</th></tr><tr><td>1</td><td>3</td><td>74, 68, 77</td><td>219</td></tr><tr><td>2</td><td>2</td><td>76, 80</td><td>156</td></tr><tr><td>3</td><td>2</td><td>85, 93</td><td>178</td></tr></table>`,
+items:[
+{id:"1a",l:"a) Modelo matricial",tex:MAT,code:CODE0.split("\n").slice(0,4).join("\n")},
+{id:"1b",l:"b) Solución particular de la ecuación normal",tex:R`$$(X^TX)b=X^Ty\Rightarrow \hat b=(X^TX)^-X^Ty=`+GM.replace("G=","")+R`X^Ty=\begin{bmatrix}0\\73\\78\\89\end{bmatrix}$$`,code:CODE0},
+{id:"1c",l:"c) ¿Igual consumo por nivel? ANOVA",tex:R`$$\begin{aligned}SC_{Reg}&=y^TX\hat b=43997\\SC_{Total}&=y^Ty=44079\\SC_{Media}&=n\bar y^2=7(79)^2=43687\\SC_{Resid}&=y^Ty-y^TX\hat b=82\\SC_{Reg_m}&=43997-43687=310\end{aligned}$$<table class="d"><tr><th>FV</th><th>GL</th><th>SC</th><th>CM</th><th>F</th></tr><tr><td>Tratamientos</td><td>2</td><td>310</td><td>155</td><td>7.561</td></tr><tr><td>Error</td><td>4</td><td>82</td><td>20.5</td><td></td></tr><tr><td>Total</td><td>6</td><td>392</td><td></td><td></td></tr></table>$$H_0:\mu_1=\mu_2=\mu_3\quad vs\quad H_1:\text{algún }\mu_i\ne\mu,\quad F_c=7.561>F_{0.95,2,4}=6.944$$`,code:R`SCReg <- t(y)%*%X%*%b0; SCMedia <- n*mean(y)^2
+Fcal <- ((SCReg-SCMedia)/(r-1))/s2
+Fcrit <- qf(0.95, r-1, n-r)   # 6.944272`,v:[0,"Rechazar H₀","Al menos un consumo medio difiere significativamente entre niveles."],ch:[2,4,7.561,6.944]},
+{id:"1d",l:"d) Estimabilidad de μ+α₁, B.L.U.E. e IC",tex:R`$$\lambda^T=[1\ 1\ 0\ 0],\quad \lambda^TH=\lambda^T\ \checkmark\ \text{(estimable)}$$$$\lambda^T\hat\beta=73,\qquad \widehat{Var}=20.5\,\lambda^TG\lambda=6.8333$$$$IC_{95\%}=73\mp 2.776445\sqrt{6.8333}=[65.742,\ 80.258]$$`,code:R`l <- c(1,1,0,0); H <- G %*% A
+media <- t(l)%*%b0; v <- s2*(t(l)%*%G%*%l)
+media + c(-1,1)*qt(.975,n-r)*sqrt(v)`},
+{id:"1e",l:"e) H₀: α₂−α₁=9 y 2α₃−α₁−α₂=30",tex:R`$$\Lambda=\begin{bmatrix}0&-1&1&0\\0&-1&-1&2\end{bmatrix},\ d=\begin{bmatrix}9\\30\end{bmatrix},\ r(\Lambda)=2,\ \Lambda H=\Lambda$$$$SC_{H_0}=(\Lambda\hat b-d)^T(\Lambda G\Lambda^T)^{-1}(\Lambda\hat b-d)=24.357,\quad F=\frac{24.357}{2(20.5)}=0.594$$$$F_{0.95,2,4}=6.944$$`,code:R`SCH0 <- t(L%*%b0-d)%*%solve(L%*%G%*%t(L))%*%(L%*%b0-d)
+Fcal <- SCH0/(2*s2)   # 0.5940767`,v:[1,"No rechazar H₀","F=0.594 < 6.944 (α=0.05)."],ch:[2,4,.594,6.944]},
+{id:"1f",l:"f) H₀: 7μ+3α₁+2α₂+2α₃=0",tex:R`$$\lambda^T=[7\ 3\ 2\ 2],\ \lambda^TH=\lambda^T\ \checkmark$$$$SC_{H_0}=43687,\quad F=\frac{43687}{20.5}=2131.07\gg F_{0.95,1,4}=7.709$$`,code:R`SCH0 <- (L%*%b0)^2/(L%*%G%*%t(L))
+Fcal <- SCH0/s2   # 2131.073`,v:[0,"Rechazar H₀","F=2131.07 > 7.709 (α=0.05)."],ch:[1,4,2131.07,7.709]},
+{id:"1g",l:"g) H₀: α₁−α₂ = α₁−α₃ = 0",tex:R`$$\Lambda=\begin{bmatrix}0&1&-1&0\\0&1&0&-1\end{bmatrix},\ SC_{H_0}=310,\quad F=\frac{310}{2(20.5)}=7.561>6.944$$`,code:R`Fcal <- SCH0/(2*s2)   # 7.560976`,v:[0,"Rechazar H₀","Equivale al contraste global de tratamientos."],ch:[2,4,7.561,6.944]},
+{id:"1h",l:"h) Ortogonalidad e independencia",tex:R`$$\lambda_1=[7\ 3\ 2\ 2],\ \lambda_2=[0\ 1\ -1\ 0],\ \lambda_3=[0\ 1\ 0\ -1]$$$$\lambda_1^TG\lambda_2=0,\quad \lambda_1^TG\lambda_3=0,\quad \lambda_2^TG\lambda_3=\tfrac13\ne0$$Las tres son estimables y linealmente independientes ($r=3$), pero <b>no</b> mutuamente ortogonales: solo $\lambda_1$ es ortogonal a las otras dos.`,code:R`ort <- Lh %*% G %*% t(Lh)
+ort[1,2]; ort[1,3]; ort[2,3]   # 0, 0, 1/3`}
+]},
+{id:"e2",t:"Ejercicio 2",s:R`Una comunidad tiene 12 % sin secundaria (nivel 1), 68 % graduados de secundaria (nivel 2) y 20 % universitarios (nivel 3). Con los datos de la Tabla 5.4 halle media poblacional, varianza, IC, contraste F y un contraste ortogonal.`,
+items:[
+{id:"2a",l:"a–c) Media, varianza e IC poblacional",tex:R`$$\lambda^T=[1\ 0.12\ 0.68\ 0.2],\quad \lambda^T\hat\beta=79.6$$$$\widehat{Var}=20.5\,\lambda^TG\lambda=5.248$$$$IC_{95\%}=79.6\mp2.776445\sqrt{5.248}=[73.240,\ 85.960]$$`,code:R`l <- c(1,.12,.68,.20)
+m <- t(l)%*%b0; v <- s2*(t(l)%*%G%*%l)
+m + c(-1,1)*qt(.975,n-r)*sqrt(v)`},
+{id:"2d",l:"d) H₀: μ+α₁=70 y α₁=α₃−15",tex:R`$$\Lambda=\begin{bmatrix}1&1&0&0\\0&1&0&-1\end{bmatrix},\ d=\begin{bmatrix}70\\-15\end{bmatrix},\ SC_{H_0}=59,\quad F=\frac{59}{41}=1.439$$`,code:R`Fcal <- SCH0/(2*s2)   # 1.439024`,v:[1,"No rechazar H₀","F=1.439 < 6.944 (α=0.05)."],ch:[2,4,1.439,6.944]},
+{id:"2e",l:"e) Contraste ortogonal a 4α₁−3α₂−α₃",tex:R`$$\lambda_2=[0\ f_1\ f_2\ f_3],\ \textstyle\sum f=0,\ \lambda_1^TG\lambda_2=\frac{4f_1}{3}-\frac{3f_2}{2}-\frac{f_3}{2}=0\Rightarrow\lambda_2=[0\ 6\ 11\ -17]$$$$SC_{H_1}=93,\quad SC_{H_2}=217,\quad SC_{H_0}=310=SC_{Reg_m}$$$$F=\frac{310}{2(20.5)}=7.561>6.944$$`,code:R`SCH1 <- (l1%*%b0)^2/(l1%*%G%*%l1)   # 93
+SCH2 <- (l2%*%b0)^2/(l2%*%G%*%l2)   # 217
+(SCH1+SCH2)/(2*s2)                  # 7.561`,v:[0,"Rechazar H₀","Ambos contrastes conjuntamente distintos de cero."],ch:[2,4,7.561,6.944]}
+]},
+{id:"e3",t:"Ejercicio 3",s:R`Puntajes: obreros 37, 25, 42, 28; artesanos 23, 29; profesionales 38, 30, 25; independientes 23, 29. Proporciones poblacionales: 10 %, 20 %, 40 % y 30 %. Estime y calcule la varianza estimada de las funciones pedidas.`,
+items:[
+{id:"3m",l:"Modelo y estimación base",tex:R`$$\hat\beta=\begin{bmatrix}0\\33\\26\\31\\26\end{bmatrix},\quad G=\mathrm{diag}(0,\tfrac14,\tfrac12,\tfrac13,\tfrac12),\quad \hat\sigma^2=44\ (gl=7)$$`,code:R`puntaje <- c(37,25,42,28,23,29,38,30,25,23,29)
+trab <- factor(rep(1:4, c(4,2,3,2)))
+X3 <- cbind(1, model.matrix(puntaje ~ trab - 1))
+G3 <- invg(t(X3)%*%X3); b0_3 <- G3%*%t(X3)%*%puntaje`},
+{id:"3a",l:"a) Puntaje poblacional",tex:R`$$\lambda^T=[1\ .1\ .2\ .4\ .3]:\quad \lambda^T\hat\beta=28.7,\quad\widehat{Var}=5.3167$$`,code:R`l <- c(1,.1,.2,.4,.3)
+t(l)%*%b0_3; s2_3*(t(l)%*%G3%*%l)`},
+{id:"3b",l:"b) Profesionales vs. promedio de los otros tres",tex:R`$$\lambda^T=[0\ -\tfrac13\ -\tfrac13\ 1\ -\tfrac13]$$$$\lambda^T\hat\beta=2.6667,\quad\widehat{Var}=20.7778$$`,code:R`l <- c(0,-1/3,-1/3,1,-1/3)   # estimable: l'H = l'`},
+{id:"3c",l:"c) Independiente vs. profesional",tex:R`$$\lambda^T=[0\ 0\ 0\ -1\ 1]$$$$\lambda^T\hat\beta=-5,\quad\widehat{Var}=36.6667$$`,code:R`l <- c(0,0,0,-1,1)`}
+]},
+{id:"e4",t:"Ejercicio 4",s:R`(Continuación del 3) Contraste que el puntaje de un obrero es igual al de un artesano, igual al promedio de un profesional y un independiente, y todos iguales al promedio ponderado poblacional de obrero y profesional.`,
+items:[
+{id:"4a",l:"Contraste conjunto de 3 restricciones",tex:R`$$\Lambda=\begin{bmatrix}0&1&-1&0&0\\0&2&0&-1&-1\\0&1&0&-1&0\end{bmatrix},\ r(\Lambda)=3,\ \Lambda H=\Lambda$$$$SC_{H_0}=102.9091,\quad F=\frac{102.9091}{3(44)}=0.7796,\quad F_{0.95,3,7}=4.347$$`,code:R`Fcal4 <- SCH04/(3*s2_3)   # 0.7796143
+qf(0.95, 3, 7)            # 4.346831`,v:[1,"No rechazar H₀","F=0.780 < 4.347 (α=0.05)."],ch:[3,7,.78,4.347]}
+]},
+{id:"e5",t:"Ejercicio 5",s:R`(Continuación del 3) Halle dos contrastes mutuamente ortogonales, sin trabajadores independientes y ortogonales a «obrero − artesano», y contraste la hipótesis conjunta de que los tres son cero.`,
+items:[
+{id:"5a",l:"Contrastes ortogonales y prueba conjunta",tex:R`$$\lambda_1=[0\ 1\ -1\ 0\ 0],\ \lambda_2=[0\ 2\ 1\ -3\ 0],\ \lambda_3=[0\ 4\ 2\ 3\ -9]$$$$SC_1=65.333,\ SC_2=0.222,\ SC_3=37.354\Rightarrow SC_{H_0}=\tfrac{10188}{99}\approx102.909$$$$F=\frac{102.909}{3(44)}=0.7796<F_{0.95,3,7}=4.347$$`,code:R`SCH_i <- (L5%*%b0_3)^2 / diag(L5%*%G3%*%t(L5))
+sum(SCH_i)/(3*s2_3)   # 0.7796`,v:[1,"No rechazar H₀","Coincide con el Ejercicio 4: misma suma de cuadrados."],ch:[3,7,.78,4.347]}
+]}];
 
+// ---- construcción ----
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+function hl(c){return esc(c).replace(/(#.*$)|("[^"]*")|\b(\d+\.?\d*)\b|\b([A-Za-z_.][\w.]*)(?=\()|\b(function|for|if|else|TRUE|FALSE|NULL)\b/gm,(m,a,b,c2,d,e)=>a?`<span class=c>${m}</span>`:b?`<span class=s>${m}</span>`:c2?`<span class=n>${m}</span>`:d?`<span class=f>${m}</span>`:`<span class=kw>${m}</span>`)}
+const lg=x=>{let s=0;while(x<7){s-=Math.log(x);x++}return s+(x-.5)*Math.log(x)-x+.9189385+1/(12*x)-1/(360*x**3)};
+const pdf=(x,a,b)=>Math.exp(lg((a+b)/2)-lg(a/2)-lg(b/2)+a/2*Math.log(a/b)+(a/2-1)*Math.log(x)-(a+b)/2*Math.log(1+a*x/b));
+function chart([a,b,Fc,Fk]){
+ const W=520,H=230,L=40,B=190,T=16,xm=Math.max(Fk*2.4,6);let pts=[],mx=0;
+ for(let i=0;i<=200;i++){const x=Math.max(xm*i/200,.12);const y=pdf(x,a,b);pts.push([x,y])}
+ mx=Math.min(Math.max(...pts.map(p=>p[1])),1.1);
+ const X=x=>L+(x/xm)*(W-L-12),Y=y=>B-Math.min(y/mx,1)*(B-T);
+ const line=pts.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join(" ");
+ const crit=pts.filter(p=>p[0]>=Fk);const area=`${X(Fk)},${B} `+crit.map(p=>X(p[0]).toFixed(1)+","+Y(p[1]).toFixed(1)).join(" ")+` ${X(xm)},${B}`;
+ const out=Fc>xm,fx=out?X(xm)-4:X(Fc);
+ return `<svg viewBox="0 0 ${W} ${H}"><text x="${L}" y="12" font-size="12" style="fill:var(--mu)">F(${a}, ${b}) · α=0.05</text><polygon points="${area}" style="fill:rgba(240,136,62,.45)"/><polyline points="${line}" fill="none" style="stroke:var(--acc)" stroke-width="2.5"/><line x1="${L}" y1="${B}" x2="${W-8}" y2="${B}" style="stroke:var(--mu)"/><line x1="${X(Fk)}" y1="${T+20}" x2="${X(Fk)}" y2="${B}" stroke-dasharray="4" style="stroke:var(--bad)"/><text x="${X(Fk)+4}" y="${T+32}" font-size="11" style="fill:var(--bad)">F crít = ${Fk}</text><line x1="${fx}" y1="${T+50}" x2="${fx}" y2="${B}" stroke-width="2.5" style="stroke:${Fc>Fk?'var(--bad)':'var(--ok)'}"/><text x="${Math.min(fx,W-120)}" y="${T+62}" font-size="12" font-weight="700" style="fill:${Fc>Fk?'var(--bad)':'var(--ok)'}">F calc = ${Fc}${out?' →':''}</text><text x="${L}" y="${B+16}" font-size="11" style="fill:var(--mu)">0</text><text x="${W-30}" y="${B+16}" font-size="11" style="fill:var(--mu)">${xm.toFixed(0)}</text><text x="${(W)/2}" y="${H-6}" font-size="11" style="fill:var(--mu)">región crítica sombreada</text></svg>`}
+let html="",toc="<a href='#top' class='h'>Portada</a>";
+D.forEach(e=>{html+=`<h2 id="${e.id}">${e.t}</h2><div class="stmt"><b class="k">Enunciado</b>${e.s}</div>`;toc+=`<a href="#${e.id}" class="h">${e.t}</a>`;
+ e.items.forEach(i=>{toc+=`<a href="#${i.id}" class="s">${i.l.split(")")[0].length<5?i.l.split(")")[0]+")":i.l.slice(0,22)}</a>`;
+ const v=i.v?`<div class="verd"><span class="pill ${i.v[0]?'ok':'no'}">${i.v[1]}</span><span>${i.v[2]}</span></div>`:"";
+ const ch=i.ch?`<div class="fc">${chart(i.ch)}</div>`:"";
+ html+=`<h3 id="${i.id}">${i.l}</h3><div class="tabs"><button class="on" data-t="0">Desarrollo analítico</button><button data-t="1">Comprobación en R</button></div><div class="pane on">${i.tex}${ch}${v}</div><div class="pane"><div class="code"><div class="ch"><span>R</span><span><button data-a="fold">Plegar</button><button data-a="copy">Copiar</button></span></div><pre>${hl(i.code)}</pre></div></div>`})});
+toc+="<a href='#refs' class='h'>Bibliografía</a>";
+document.getElementById("content").innerHTML=html;const T=document.getElementById("toc");T.innerHTML=toc;
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.t!==undefined){const w=b.parentElement,p=w.nextElementSibling,ps=[p,p.nextElementSibling];w.querySelectorAll("button").forEach((x,k)=>{x.classList.toggle("on",x===b)});ps.forEach((x,k)=>x.classList.toggle("on",k==b.dataset.t))}
+ if(b.dataset.a==="fold"){const c=b.closest(".code");c.classList.toggle("fold");b.textContent=c.classList.contains("fold")?"Expandir":"Plegar"}
+ if(b.dataset.a==="copy"){const t=b.closest(".code").querySelector("pre").textContent;const ok=()=>{b.textContent="¡Copiado!";setTimeout(()=>b.textContent="Copiar",1400)};try{navigator.clipboard.writeText(t).then(ok,ok)}catch(_){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(_){}a.remove();ok()}}});
+const nav=T,main=document.getElementById("main");
+document.getElementById("toggle").onclick=()=>{if(innerWidth>900){nav.classList.toggle("hide");main.classList.toggle("full")}else nav.classList.toggle("show")};
+T.addEventListener("click",e=>{if(e.target.tagName==="A"&&innerWidth<=900)nav.classList.remove("show")});
+const links=[...T.querySelectorAll("a")],map=new Map(links.map(a=>[a.getAttribute("href").slice(1),a]));
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){links.forEach(a=>a.classList.remove("on"));const a=map.get(en.target.id);a&&a.classList.add("on")}}),{rootMargin:"-10% 0px -80% 0px"});
+map.forEach((a,id)=>{const el=document.getElementById(id);el&&io.observe(el)});
+// ---- fondo ----
+(function(){const c=document.getElementById("bg"),x=c.getContext("2d");let w,h,m={x:.5,y:.5};
+ const P=Array.from({length:70},()=>({x:Math.random(),y:Math.random(),vx:(Math.random()-.5)*8e-4,vy:(Math.random()-.5)*8e-4,r:Math.random()*1.8+.6}));
+ const rs=()=>{const d=devicePixelRatio||1;w=c.width=innerWidth*d;h=c.height=innerHeight*d;x.setTransform(d,0,0,d,0,0);w=innerWidth;h=innerHeight};rs();addEventListener("resize",rs);
+ addEventListener("pointermove",e=>{m.x=e.clientX/innerWidth;m.y=e.clientY/innerHeight});
+ const S=["Σ","β̂","σ²","XᵀX","F","α","λᵀβ","H₀","(XᵀX)⁻","ŷ","μ","χ²","∫","e~N(0,σ²I)"].map(s=>({s,x:Math.random(),y:Math.random(),v:2e-4+Math.random()*3e-4,z:12+Math.random()*16,p:Math.random()*6}));
+ const Q=Array.from({length:18},(_,i)=>[i/17,Math.sin(i*12.9)*.5]);
+ let t=0;function f(){t+=.004;x.clearRect(0,0,w,h);x.strokeStyle="rgba(139,148,158,.07)";x.lineWidth=1;
+  for(let i=0;i<w;i+=60){x.beginPath();x.moveTo(i,0);x.lineTo(i,h);x.stroke()}for(let j=0;j<h;j+=60){x.beginPath();x.moveTo(0,j);x.lineTo(w,j);x.stroke()}
+  for(let k=0;k<3;k++){const cx=((.2+k*.3+Math.sin(t+k)*.08)*w),sg=60+k*25,base=h*(.35+k*.22),A=70+k*18;
+   x.beginPath();for(let px=-200;px<=200;px+=6){const y=base-A*Math.exp(-px*px/(2*sg*sg));px===-200?x.moveTo(cx+px,y):x.lineTo(cx+px,y)}
+   x.strokeStyle=k%2?"rgba(194,65,12,.28)":"rgba(217,119,6,.28)";x.lineWidth=1.6;x.stroke()}
+  x.font='14px "Fira Code",monospace';S.forEach(o=>{o.y-=o.v;if(o.y<-.05)o.y=1.05;x.font=o.z+'px "Fira Code",monospace';x.fillStyle="rgba(217,119,6,.14)";x.fillText(o.s,o.x*w+Math.sin(t+o.p)*20,o.y*h)});
+  {const bx=w*.6,by=h*.1,bw=w*.34,bh=h*.26;x.strokeStyle="rgba(232,164,85,.3)";x.lineWidth=1.5;x.beginPath();x.moveTo(bx,by+bh*.85);x.lineTo(bx+bw,by+bh*.15);x.stroke();
+   Q.forEach(([u,nz],i)=>{const px=bx+u*bw,ly=by+bh*(.85-.7*u),py=ly+nz*bh*.45+Math.sin(t*2+i)*4;x.strokeStyle="rgba(194,65,12,.22)";x.beginPath();x.moveTo(px,ly);x.lineTo(px,py);x.stroke();x.beginPath();x.arc(px,py,3,0,6.3);x.fillStyle="rgba(232,164,85,.45)";x.fill()});
+   x.save();x.translate(w*.18,h*.78);x.rotate(-.5+Math.sin(t)*.15);x.setLineDash([6,6]);x.strokeStyle="rgba(217,119,6,.25)";for(let k=1;k<=3;k++){x.beginPath();x.ellipse(0,0,50*k,22*k,0,0,6.3);x.stroke()}x.restore()}
+  P.forEach(p=>{p.x=(p.x+p.vx+1)%1;p.y=(p.y+p.vy+1)%1;const dx=p.x*w-m.x*w,dy=p.y*h-m.y*h,d=Math.hypot(dx,dy);if(d<140){p.x+=dx/d*.0012;p.y+=dy/d*.0012}
+   x.beginPath();x.arc(p.x*w,p.y*h,p.r,0,6.3);x.fillStyle="rgba(232,164,85,.5)";x.fill()});requestAnimationFrame(f)}f()})();
+window.MathJax={tex:{inlineMath:[["$","$"]],displayMath:[["$$","$$"]]},svg:{fontCache:"global"}};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" async></script>
+</body></html>
