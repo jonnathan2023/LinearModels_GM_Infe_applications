@@ -54,7 +54,7 @@ Pedraza Laboriano, Jonnathan Jesús & 20231505 \\
 Cortegana Quispe, Luis & 20230388 \\
 Encinas Alvarez, Miguel & 20230391 \\
 Fuente Bueno, Fiorella & 20230395 \\
-name & idcode \\
+Vasquez Velasquez, Flavia M. & 20230417 \\
 \hline
 \end{tabular}
 
