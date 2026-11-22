@@ -50,4 +50,4 @@ LinearModels_GM_Infe_applications/
   - Luis Cortegana Quispe (20230388)
   - Miguel Encinas Alvarez (20230391)
   - Fiorella Fuente Bueno (20230395)
-  - name (IDcode)
+  - Vasquez Velasquez, Flavia M. (20230417) 
